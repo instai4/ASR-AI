@@ -306,13 +306,16 @@ function renderResponse(data) {
         <div id="img-loading-${Date.now()}" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:var(--bg2);border-radius:12px;font-size:.75rem;color:var(--txt3);gap:.5rem">
           <i class="fa-solid fa-spinner fa-spin"></i> Generating image...
         </div>
-        <img
-          src="${data.url}"
-          alt="${data.prompt}"
-          style="width:100%;display:block;border-radius:12px"
-          onload="this.previousElementSibling.style.display='none'"
-          onerror="this.previousElementSibling.innerHTML='<i class=\\'fa-solid fa-triangle-exclamation\\'></i> Failed to generate. Try again.'"
-        >
+       <img
+  src="${data.url}"
+  alt="${data.prompt}"
+  style="width:100%;display:block;border-radius:12px"
+  onload="this.previousElementSibling.style.display='none'"
+  onerror="
+    this.previousElementSibling.innerHTML='Retrying...';
+    setTimeout(() => { this.src='${data.url}&retry=' + Date.now(); }, 1000);
+  "
+>
       </div>
       <p style="font-family:var(--fm);font-size:.54rem;color:var(--txt3);margin-top:.4rem">
         <i class="fa-solid fa-circle-info"></i> Powered by Pollinations AI · Free & unlimited

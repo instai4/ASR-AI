@@ -85,26 +85,25 @@ export default async function handler(req, res) {
       msg.match(/\b(?:generate|draw|create|paint|render|design)\b\s+(?:a|an|me|some)?\s*(.{3,80})/i);
 
     if (aiImgMatch) {
-      // Extract the actual prompt — strip trigger words, keep the description
-      const rawPrompt = message
-        .replace(/\b(generate|create|draw|make|paint|design|render|imagine|produce|me|a|an|some|please)\b/gi, '')
-        .replace(/\b(image|picture|illustration|artwork|painting|portrait|wallpaper|logo|poster)\b\s*(of|showing|with|featuring|depicting)?\s*/gi, '')
-        .trim()
-        .replace(/\s+/g, ' ') || message;
+  const rawPrompt = message
+    .replace(/^(generate|create|draw|make|paint|design|render|imagine|produce)\s+/i, '')
+    .replace(/\b(image|picture|artwork|photo)\b\s*(of)?/gi, '')
+    .trim();
 
-      // Pollinations API — completely free, no API key required
-      // Width/height and model can be tuned
-      const encodedPrompt = encodeURIComponent(rawPrompt);
-      const seed = Math.floor(Math.random() * 999999); // random seed = unique image each time
-      const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&seed=${seed}&model=flux&nologo=true&enhance=true`;
+  const finalPrompt = rawPrompt || message;
 
-      return res.json({
-        type: 'ai_image',
-        prompt: rawPrompt,
-        url: imageUrl
-      });
-    }
-    
+  const encodedPrompt = encodeURIComponent(finalPrompt);
+  const seed = Math.floor(Math.random() * 999999);
+
+  const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&seed=${seed}`;
+ console.log("Generated URL:", imageUrl);
+  return res.json({
+    type: 'ai_image',
+    prompt: finalPrompt,
+    url: imageUrl
+  });
+}
+
       // ── UNSPLASH PHOTOS ──
     const imgMatch =
       msg.match(/\b(?:show|find|get|display|search)\s+(?:me\s+)?(?:(?:some|a|photos?|pictures?|images?|pics?)\s+)?(?:of\s+)?(.+?)(?:\s+(?:photos?|pictures?|images?|pics?))?\s*$/i) ||
