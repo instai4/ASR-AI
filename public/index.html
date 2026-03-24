@@ -120,8 +120,24 @@ nav{
   width:230px;flex-shrink:0;
   background:var(--bg1);border-right:1px solid var(--border);
   display:flex;flex-direction:column;overflow:hidden;
+  transition:width .22s cubic-bezier(.4,0,.2,1),min-width .22s;
 }
+.sidebar.collapsed{width:0;min-width:0;border-right:none}
 @media(max-width:768px){.sidebar{display:none}}
+
+/* Sidebar toggle button — floats on the left edge of chat area */
+.sidebar-toggle{
+  position:absolute;top:50%;transform:translateY(-50%);
+  left:0;z-index:50;
+  width:18px;height:48px;
+  background:var(--bg1);border:1px solid var(--border2);
+  border-left:none;border-radius:0 8px 8px 0;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;color:var(--txt3);font-size:.6rem;
+  transition:background .12s,color .12s,left .22s cubic-bezier(.4,0,.2,1);
+}
+.sidebar-toggle:hover{background:var(--surface);color:var(--txt2)}
+.chat-wrap{position:relative}
 
 .sidebar-head{
   padding:.8rem .8rem .5rem;flex-shrink:0;
@@ -254,7 +270,29 @@ nav{
 .msg-bubble hr{border:none;border-top:1px solid var(--border2);margin:.5rem 0}
 .msg-bubble blockquote{border-left:3px solid var(--blue);padding-left:.7rem;color:var(--txt2);margin:.4rem 0}
 
-/* streaming cursor */
+/* ── CODE BLOCK COPY ── */
+.code-block{position:relative;margin:.4rem 0}
+.code-block pre{margin:0;padding-right:3rem}
+.copy-btn{
+  position:absolute;top:.45rem;right:.45rem;
+  display:flex;align-items:center;gap:.3rem;
+  padding:.25rem .55rem;border-radius:5px;
+  background:var(--surface);border:1px solid var(--border2);
+  color:var(--txt3);font-family:var(--fm);font-size:.58rem;font-weight:500;
+  cursor:pointer;transition:all .12s;opacity:0;
+  white-space:nowrap;
+}
+.copy-btn i{font-size:.6rem}
+.code-block:hover .copy-btn{opacity:1}
+.copy-btn:hover{background:var(--lift);color:var(--txt2);border-color:var(--lift)}
+.copy-btn.copied{color:var(--green);border-color:rgba(34,197,94,.3);background:rgba(34,197,94,.08)}
+
+/* code lang label */
+.code-lang{
+  position:absolute;top:.45rem;left:.7rem;
+  font-family:var(--fm);font-size:.55rem;color:var(--txt3);
+  text-transform:uppercase;letter-spacing:.07em;pointer-events:none;
+}
 .stream-cursor{
   display:inline-block;width:2px;height:1em;background:var(--blue2);
   margin-left:2px;vertical-align:middle;border-radius:1px;
@@ -456,6 +494,9 @@ nav{
 
   <!-- CHAT -->
   <div class="chat-wrap">
+    <button class="sidebar-toggle" id="sidebar-toggle" onclick="toggleSidebar()" title="Toggle sidebar">
+      <i class="fa-solid fa-chevron-left" id="sidebar-toggle-icon"></i>
+    </button>
     <div class="messages" id="messages">
       <div class="welcome" id="welcome">
         <div class="welcome-logo">A</div>
@@ -716,7 +757,11 @@ function scrollToBottom() {
 function md(text) {
   return text
     .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-    .replace(/```(\w*)\n([\s\S]*?)```/g,(_,l,c)=>`<pre><code>${c.trim()}</code></pre>`)
+    .replace(/```(\w*)\n([\s\S]*?)```/g,(_,lang,code)=>{
+      const escaped = code.trim();
+      const langLabel = lang ? `<span class="code-lang">${lang}</span>` : '';
+      return `<div class="code-block">${langLabel}<pre><code>${escaped}</code></pre><button class="copy-btn" onclick="copyCode(this)"><i class="fa-regular fa-copy"></i> Copy</button></div>`;
+    })
     .replace(/`([^`]+)`/g,'<code>$1</code>')
     .replace(/^### (.+)$/gm,'<h3>$1</h3>')
     .replace(/^## (.+)$/gm,'<h2>$1</h2>')
@@ -730,7 +775,7 @@ function md(text) {
     .replace(/(<li>.*<\/li>\n?)+/g,m=>`<ul>${m}</ul>`)
     .replace(/^> (.+)$/gm,'<blockquote>$1</blockquote>')
     .split('\n\n').map(b=>{
-      if(/^<(h[1-6]|ul|ol|pre|hr|blockquote)/.test(b.trim()))return b;
+      if(/^<(h[1-6]|ul|ol|pre|hr|blockquote|div)/.test(b.trim()))return b;
       if(!b.trim())return'';
       return`<p>${b.replace(/\n/g,'<br>')}</p>`;
     }).join('\n');
@@ -1021,6 +1066,44 @@ async function sendMessage() {
   isLoading = false;
   document.getElementById('send-btn').disabled = false;
   document.getElementById('input').focus();
+}
+
+// ── COPY CODE ──
+function copyCode(btn) {
+  const code = btn.closest('.code-block').querySelector('code');
+  const text = code.innerText || code.textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    btn.classList.add('copied');
+    btn.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
+    setTimeout(() => {
+      btn.classList.remove('copied');
+      btn.innerHTML = '<i class="fa-regular fa-copy"></i> Copy';
+    }, 2000);
+  }).catch(() => {
+    // Fallback for older browsers
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';ta.style.opacity = '0';
+    document.body.appendChild(ta);ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    btn.classList.add('copied');
+    btn.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
+    setTimeout(() => {
+      btn.classList.remove('copied');
+      btn.innerHTML = '<i class="fa-regular fa-copy"></i> Copy';
+    }, 2000);
+  });
+}
+
+// ── SIDEBAR TOGGLE ──
+let sidebarOpen = true;
+function toggleSidebar() {
+  sidebarOpen = !sidebarOpen;
+  const sidebar = document.querySelector('.sidebar');
+  const icon = document.getElementById('sidebar-toggle-icon');
+  sidebar.classList.toggle('collapsed', !sidebarOpen);
+  icon.className = sidebarOpen ? 'fa-solid fa-chevron-left' : 'fa-solid fa-chevron-right';
 }
 
 // ── INIT ──
