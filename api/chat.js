@@ -47,26 +47,48 @@ export default async function handler(req, res) {
         return res.json({ type: 'weather', data: d });
       }
     }
-   const message = req.body.message;
+   const { GoogleGenerativeAI } = require("@google/generative-ai");
 
-// ✅ DEFINE THIS FIRST
-const aiImgMatch = /generate|create|draw|make|image|picture|art/i.test(message);
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY); // 🔥 paste your key
+
+// inside your route
+const message = req.body.message;
+
+// detect image request
+const aiImgMatch = /(generate|create|draw|make).*(image|picture|art)?/i.test(message);
 
 if (aiImgMatch) {
-  const prompt = message.trim();
+  try {
+    const prompt = message.replace(/generate|create|draw|make|image|picture/gi, '').trim();
 
-  const encodedPrompt = encodeURIComponent(prompt);
-  const seed = Math.floor(Math.random() * 999999);
+    // 🔥 Gemini image model
+    const model = genAI.getGenerativeModel({
+      model: "gemini-1.5-flash"
+    });
 
-  const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?seed=${seed}`;
-  const fallbackUrl = `https://picsum.photos/seed/${encodedPrompt}/512/512`;
+    const result = await model.generateContent([
+      `Generate a detailed image of: ${prompt}`
+    ]);
 
-  return res.json({
-    type: 'ai_image',
-    prompt,
-    url: imageUrl,
-    fallback: fallbackUrl
-  });
+    // ⚠️ Gemini returns text + sometimes base64 image (depends on model)
+    const response = result.response;
+
+    // fallback: generate image via URL API (stable method)
+    const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}`;
+
+    return res.json({
+      type: "ai_image",
+      prompt,
+      url: imageUrl
+    });
+
+  } catch (err) {
+    console.error(err);
+    return res.json({
+      type: "error",
+      message: "Image generation failed"
+    });
+  }
 }
 
     // ── NEWS ──
