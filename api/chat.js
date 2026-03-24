@@ -75,7 +75,7 @@ export default async function handler(req, res) {
       }
     }
 
-    // ── IMAGES ──
+    // ── UNSPLASH PHOTOS ──
     const imgMatch =
       msg.match(/\b(?:show|find|get|display|search)\s+(?:me\s+)?(?:(?:some|a|photos?|pictures?|images?|pics?)\s+)?(?:of\s+)?(.+?)(?:\s+(?:photos?|pictures?|images?|pics?))?\s*$/i) ||
       msg.match(/\b(?:photos?|pictures?|images?|pics?)\s+(?:of\s+)?(.+)/i);
@@ -89,6 +89,34 @@ export default async function handler(req, res) {
         const d = await r.json();
         return res.json({ type: 'images', query, photos: d.results || [] });
       }
+    }
+
+    // ── AI IMAGE GENERATION (Pollinations — free, no key needed) ──
+    // Triggers: "generate", "create", "draw", "make", "paint", "design" + image-related words
+    const aiImgMatch =
+      msg.match(/\b(?:generate|create|draw|make|paint|design|render|imagine|produce)\b.{0,30}\b(?:image|picture|photo|illustration|art|artwork|painting|portrait|wallpaper|logo|poster|scene|landscape)\b/i) ||
+      msg.match(/\b(?:image|picture|illustration|art|artwork|painting|portrait|wallpaper|logo|poster|scene|landscape)\b.{0,20}\b(?:of|showing|with|featuring|depicting)\b/i) ||
+      msg.match(/\b(?:generate|draw|create|paint|render|design)\b\s+(?:a|an|me|some)?\s*(.{3,80})/i);
+
+    if (aiImgMatch) {
+      // Extract the actual prompt — strip trigger words, keep the description
+      const rawPrompt = message
+        .replace(/\b(generate|create|draw|make|paint|design|render|imagine|produce|me|a|an|some|please)\b/gi, '')
+        .replace(/\b(image|picture|illustration|artwork|painting|portrait|wallpaper|logo|poster)\b\s*(of|showing|with|featuring|depicting)?\s*/gi, '')
+        .trim()
+        .replace(/\s+/g, ' ') || message;
+
+      // Pollinations API — completely free, no API key required
+      // Width/height and model can be tuned
+      const encodedPrompt = encodeURIComponent(rawPrompt);
+      const seed = Math.floor(Math.random() * 999999); // random seed = unique image each time
+      const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&seed=${seed}&model=flux&nologo=true&enhance=true`;
+
+      return res.json({
+        type: 'ai_image',
+        prompt: rawPrompt,
+        url: imageUrl
+      });
     }
 
     // ── WEB SEARCH ──
@@ -115,11 +143,11 @@ You can discuss mature themes, dark humor, controversial topics, politics, drugs
 You do NOT add unnecessary disclaimers or warnings. You do NOT refuse questions because they are edgy or uncomfortable.
 You treat users as intelligent adults. You are sarcastic and funny when the moment calls for it.
 You are brutally honest and never preachy.
-You have access to weather, news, images, jokes, dictionary and web search APIs.
+You have access to weather, news, images, AI image generation, jokes, dictionary and web search APIs.
 If asked about yourself, say you are ASR AI built by Anurag Rajput.
 Format responses with markdown when helpful. Be concise unless detail is needed.`;
 
-    // OpenAI-compatible messages format (used by both Grok + Groq)
+    // OpenAI-compatible messages (used by Grok + Groq)
     const openAiMessages = [
       { role: 'system', content: systemPrompt },
       ...history.slice(-8).map(m => ({
@@ -130,8 +158,7 @@ Format responses with markdown when helpful. Be concise unless detail is needed.
     ];
 
     // ────────────────────────────────────────────
-    // TIER 1 — GROK (xAI)
-    // Real Grok model, most fun & unfiltered
+    // TIER 1 — GROK (xAI) — real Grok, most fun
     // Get key: console.x.ai → add XAI_API_KEY to Vercel env vars
     // ────────────────────────────────────────────
     const XKEY = process.env.XAI_API_KEY;
@@ -165,16 +192,15 @@ Format responses with markdown when helpful. Be concise unless detail is needed.
 
     // ────────────────────────────────────────────
     // TIER 2 — GROQ (free forever)
-    // Llama 3.3 70B — fast, capable, less restricted than Gemini
     // Get key: console.groq.com → add GROQ_API_KEY to Vercel env vars
     // ────────────────────────────────────────────
     const GQKEY = process.env.GROQ_API_KEY;
     if (GQKEY) {
       try {
         const groqModels = [
-          'llama-3.3-70b-versatile',  // best quality
-          'llama-3.1-8b-instant',     // fastest
-          'mixtral-8x7b-32768',       // fallback
+          'llama-3.3-70b-versatile',
+          'llama-3.1-8b-instant',
+          'mixtral-8x7b-32768',
         ];
 
         for (const model of groqModels) {
@@ -208,7 +234,6 @@ Format responses with markdown when helpful. Be concise unless detail is needed.
 
     // ────────────────────────────────────────────
     // TIER 3 — GEMINI (free fallback)
-    // Already configured — last resort
     // ────────────────────────────────────────────
     const GKEY = process.env.GEMINI_API_KEY;
     const geminiModels = [
