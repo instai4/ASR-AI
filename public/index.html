@@ -468,7 +468,6 @@ nav{
       <span style="font-family:var(--fm);font-size:.58rem;color:var(--txt3)">Online</span>
     </div>
     <button class="nav-btn" onclick="newChat()"><i class="fa-solid fa-plus"></i> New Chat</button>
-    <button class="nav-btn" onclick="showTerms()"><i class="fa-solid fa-shield-halved"></i> Terms</button>
   </div>
 </nav>
 
@@ -566,9 +565,6 @@ function acceptTerms() {
   if (!termsChecked) return;
   localStorage.setItem('asr_terms', '1');
   document.getElementById('terms-modal').style.display = 'none';
-}
-function showTerms() {
-  document.getElementById('terms-modal').style.display = 'flex';
 }
 if (localStorage.getItem('asr_terms')) {
   document.getElementById('terms-modal').style.display = 'none';
