@@ -75,21 +75,7 @@ export default async function handler(req, res) {
       }
     }
 
-    // ── UNSPLASH PHOTOS ──
-    const imgMatch =
-      msg.match(/\b(?:show|find|get|display|search)\s+(?:me\s+)?(?:(?:some|a|photos?|pictures?|images?|pics?)\s+)?(?:of\s+)?(.+?)(?:\s+(?:photos?|pictures?|images?|pics?))?\s*$/i) ||
-      msg.match(/\b(?:photos?|pictures?|images?|pics?)\s+(?:of\s+)?(.+)/i);
-    if (imgMatch || /\b(photo|picture|image|pic|wallpaper|illustration)\b/.test(msg)) {
-      const UKEY = process.env.UNSPLASH_ACCESS_KEY;
-      const query = (imgMatch && imgMatch[1]?.trim()) ||
-        msg.replace(/\b(show|find|get|photo|picture|image|pic|wallpaper|me|some|a|of)\b/g, '').trim() ||
-        'nature';
-      const r = await fetch(`https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=6&client_id=${UKEY}`);
-      if (r.ok) {
-        const d = await r.json();
-        return res.json({ type: 'images', query, photos: d.results || [] });
-      }
-    }
+  
 
     // ── AI IMAGE GENERATION (Pollinations — free, no key needed) ──
     // Triggers: "generate", "create", "draw", "make", "paint", "design" + image-related words
