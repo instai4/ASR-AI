@@ -88,7 +88,7 @@ export default async function handler(req, res) {
 
     // ── GEMINI (default) ──
     const GKEY = process.env.GEMINI_API_KEY;
-    const models = ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-2.5-pro'];
+    const models = ['gemini-2.0-flash-lite', 'gemini-1.5-flash-8b', 'gemini-2.5-flash', 'gemini-2.5-flash-lite'];
     const systemPrompt = `You are ASR AI, a powerful, friendly, and knowledgeable AI assistant created by Anurag Rajput. 
 You have access to multiple APIs including web search, weather, news, images, jokes, and dictionary.
 Be concise, helpful, accurate, and conversational. Format responses with markdown when helpful.
@@ -104,13 +104,15 @@ If asked about yourself, say you are ASR AI built by Anurag Rajput.`;
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          system_instruction: { parts: [{ text: systemPrompt }] },
           contents,
           generationConfig: { maxOutputTokens: 2048, temperature: 0.8 }
         })
       });
-      if (!r.ok) continue;
       const d = await r.json();
+      if (!r.ok) {
+        console.log(`Model ${model} failed: ${r.status}`, d?.error?.message);
+        continue;
+      }
       const text = d?.candidates?.[0]?.content?.parts?.[0]?.text;
       if (text) return res.json({ type: 'chat', text, model });
     }
