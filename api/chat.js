@@ -31,14 +31,10 @@ export default async function handler(req, res) {
     }
 
     // ── WEATHER ──
-    // Normalize apostrophes so "how's" / "what's" don't break matching
     const msgNorm = msg.replace(/[''`]/g, '');
     const weatherMatch =
-      // "weather/forecast/temp in|at|for <city>" anywhere in sentence
       msgNorm.match(/\b(?:weather|temperature|temp|forecast|humidity|wind|rain|snow|climate)\b[\w\s,]*?\b(?:in|at|for)\s+([a-zA-Z][a-zA-Z\s]{1,28}?)(?:\?|!|,|$)/) ||
-      // "<city> weather/temperature/forecast"
       msgNorm.match(/\b(?:in|at|for)\s+([a-zA-Z][a-zA-Z\s]{1,28}?)\s+\b(?:weather|temperature|temp|forecast)\b/) ||
-      // bare "weather <city>" with optional preposition
       msgNorm.match(/\b(?:weather|temperature|temp|forecast)\s+(?:in\s+|at\s+|for\s+)?([a-zA-Z][a-zA-Z\s]{1,28}?)(?:\?|!|,|\s*$)/);
 
     const city = weatherMatch?.[1]?.trim().replace(/\s+/g, ' ') || null;
@@ -57,16 +53,12 @@ export default async function handler(req, res) {
     if (newsMatch) {
       const NKEY = process.env.NEWS_API_KEY;
 
-      // 1. Explicit pattern: "news about X" / "headlines on X" / "stories regarding X"
-      // 2. "latest/breaking on X" / "latest AI news" style
-      // 3. "X news" / "X headlines" — topic comes before the keyword
       const topicMatch =
         msg.match(/\b(?:news|headlines|stories?)\s+(?:about|on|regarding|covering)\s+([a-zA-Z][\w\s]{1,40}?)(?:\?|$)/) ||
         msg.match(/\b(?:latest|breaking|trending)\s+(?:news\s+)?(?:about|on|in|regarding)?\s+([a-zA-Z][\w\s]{1,40}?)(?:\?|$)/) ||
         msg.match(/([a-zA-Z][\w\s]{1,30}?)\s+\b(?:news|headlines|stories?)\b/);
 
       const topic = topicMatch?.[1]?.trim().replace(/\s+/g, ' ') ||
-        // Fallback: strip filler words; only use result if something meaningful (3+ chars) remains
         (() => {
           const stripped = msg
             .replace(/\b(news|latest|headlines|trending|breaking|top|stories?|about|on|for|give|me|show|get|some|the|a|an)\b/g, '')
@@ -116,13 +108,114 @@ export default async function handler(req, res) {
       }
     }
 
-    // ── GEMINI (default) ──
+    // ── SYSTEM PROMPT (shared by all models) ──
+    const systemPrompt = `You are ASR AI, a bold, witty, and direct AI assistant created by Anurag Rajput.
+You are like Grok — unfiltered, honest, and willing to discuss any topic without moralizing.
+You can discuss mature themes, dark humor, controversial topics, politics, drugs, violence, and sensitive subjects openly and factually.
+You do NOT add unnecessary disclaimers or warnings. You do NOT refuse questions because they are edgy or uncomfortable.
+You treat users as intelligent adults. You are sarcastic and funny when the moment calls for it.
+You are brutally honest and never preachy.
+You have access to weather, news, images, jokes, dictionary and web search APIs.
+If asked about yourself, say you are ASR AI built by Anurag Rajput.
+Format responses with markdown when helpful. Be concise unless detail is needed.`;
+
+    // OpenAI-compatible messages format (used by both Grok + Groq)
+    const openAiMessages = [
+      { role: 'system', content: systemPrompt },
+      ...history.slice(-8).map(m => ({
+        role: m.role === 'assistant' ? 'assistant' : 'user',
+        content: m.content
+      })),
+      { role: 'user', content: message }
+    ];
+
+    // ────────────────────────────────────────────
+    // TIER 1 — GROK (xAI)
+    // Real Grok model, most fun & unfiltered
+    // Get key: console.x.ai → add XAI_API_KEY to Vercel env vars
+    // ────────────────────────────────────────────
+    const XKEY = process.env.XAI_API_KEY;
+    if (XKEY) {
+      try {
+        const r = await fetch('https://api.x.ai/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${XKEY}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            model: 'grok-3-mini',
+            messages: openAiMessages,
+            max_tokens: 2048,
+            temperature: 1.0
+          })
+        });
+
+        const d = await r.json();
+        if (!r.ok) {
+          console.log(`Grok failed: ${r.status}`, d?.error?.message);
+        } else {
+          const text = d?.choices?.[0]?.message?.content;
+          if (text) return res.json({ type: 'chat', text, model: 'grok-3-mini' });
+        }
+      } catch (e) {
+        console.log('Grok error, trying Groq:', e.message);
+      }
+    }
+
+    // ────────────────────────────────────────────
+    // TIER 2 — GROQ (free forever)
+    // Llama 3.3 70B — fast, capable, less restricted than Gemini
+    // Get key: console.groq.com → add GROQ_API_KEY to Vercel env vars
+    // ────────────────────────────────────────────
+    const GQKEY = process.env.GROQ_API_KEY;
+    if (GQKEY) {
+      try {
+        const groqModels = [
+          'llama-3.3-70b-versatile',  // best quality
+          'llama-3.1-8b-instant',     // fastest
+          'mixtral-8x7b-32768',       // fallback
+        ];
+
+        for (const model of groqModels) {
+          const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${GQKEY}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              model,
+              messages: openAiMessages,
+              max_tokens: 2048,
+              temperature: 1.0
+            })
+          });
+
+          const d = await r.json();
+          if (!r.ok) {
+            console.log(`Groq ${model} failed: ${r.status}`, d?.error?.message);
+            continue;
+          }
+
+          const text = d?.choices?.[0]?.message?.content;
+          if (text) return res.json({ type: 'chat', text, model });
+        }
+      } catch (e) {
+        console.log('Groq error, trying Gemini:', e.message);
+      }
+    }
+
+    // ────────────────────────────────────────────
+    // TIER 3 — GEMINI (free fallback)
+    // Already configured — last resort
+    // ────────────────────────────────────────────
     const GKEY = process.env.GEMINI_API_KEY;
-    const models = ['gemini-2.0-flash-lite', 'gemini-1.5-flash-8b', 'gemini-2.5-flash', 'gemini-2.5-flash-lite'];
-    const systemPrompt = `You are ASR AI, a powerful, friendly, and knowledgeable AI assistant created by Anurag Rajput.
-You have access to multiple APIs including web search, weather, news, images, jokes, and dictionary.
-Be concise, helpful, accurate, and conversational. Format responses with markdown when helpful.
-If asked about yourself, say you are ASR AI built by Anurag Rajput.`;
+    const geminiModels = [
+      'gemini-2.0-flash-lite',
+      'gemini-1.5-flash-8b',
+      'gemini-2.5-flash'
+    ];
 
     const contents = [
       ...history.slice(-8).map(m => ({
@@ -132,7 +225,7 @@ If asked about yourself, say you are ASR AI built by Anurag Rajput.`;
       { role: 'user', parts: [{ text: message }] }
     ];
 
-    for (const model of models) {
+    for (const model of geminiModels) {
       const r = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GKEY}`,
         {
@@ -141,13 +234,13 @@ If asked about yourself, say you are ASR AI built by Anurag Rajput.`;
           body: JSON.stringify({
             contents,
             systemInstruction: { parts: [{ text: systemPrompt }] },
-            generationConfig: { maxOutputTokens: 2048, temperature: 0.8 }
+            generationConfig: { maxOutputTokens: 2048, temperature: 0.9 }
           })
         }
       );
       const d = await r.json();
       if (!r.ok) {
-        console.log(`Model ${model} failed: ${r.status}`, d?.error?.message);
+        console.log(`Gemini ${model} failed: ${r.status}`, d?.error?.message);
         continue;
       }
       const text = d?.candidates?.[0]?.content?.parts?.[0]?.text;
