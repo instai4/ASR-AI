@@ -84,18 +84,15 @@ export default async function handler(req, res) {
       msg.match(/\b(?:image|picture|illustration|art|artwork|painting|portrait|wallpaper|logo|poster|scene|landscape)\b.{0,20}\b(?:of|showing|with|featuring|depicting)\b/i) ||
       msg.match(/\b(?:generate|draw|create|paint|render|design)\b\s+(?:a|an|me|some)?\s*(.{3,80})/i);
 
-    if (aiImgMatch) {
-  const rawPrompt = message
-    .replace(/^(generate|create|draw|make|paint|design|render|imagine|produce)\s+/i, '')
-    .replace(/\b(image|picture|artwork|photo)\b\s*(of)?/gi, '')
-    .trim();
+   if (aiImgMatch) {
+  const finalPrompt = message.trim();
 
- const finalPrompt = message.trim();
-const encodedPrompt = encodeURIComponent(finalPrompt);
-const seed = Math.floor(Math.random() * 999999);
+  const encodedPrompt = encodeURIComponent(finalPrompt);
 
-const imageUrl = `https://pollinations.ai/p/${encodedPrompt}?seed=${seed}`;
-console.log("Generated URL:", imageUrl);
+  const imageUrl = `https://pollinations.ai/p/${encodedPrompt}`;
+
+  console.log("Generated URL:", imageUrl);
+
   return res.json({
     type: 'ai_image',
     prompt: finalPrompt,
