@@ -744,9 +744,11 @@ function handleKey(e) {
   if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
 }
 
-function scrollToBottom() {
+function scrollToBottom(force = false) {
   const m = document.getElementById('messages');
-  m.scrollTop = m.scrollHeight;
+  const threshold = 120; // px from bottom
+  const isNearBottom = m.scrollHeight - m.scrollTop - m.clientHeight < threshold;
+  if (force || isNearBottom) m.scrollTop = m.scrollHeight;
 }
 
 // ── MARKDOWN PARSER ──
@@ -900,7 +902,7 @@ function addMsgDOM(role, content, isHTML = false) {
     <div class="msg-bubble">${isHTML ? content : md(content)}</div>`;
 
   msgs.appendChild(div);
-  scrollToBottom();
+  scrollToBottom(true);
   return div;
 }
 
@@ -948,7 +950,7 @@ function addTyping() {
       </div>
     </div>`;
   msgs.appendChild(div);
-  scrollToBottom();
+  scrollToBottom(true);
 }
 
 function removeTyping() {
