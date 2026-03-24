@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ASR AI — Your Intelligent Assistant</title>
-<link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -33,9 +33,7 @@ body{font-family:var(--ff);background:var(--bg);color:var(--txt);display:flex;fl
   max-width:540px;width:100%;max-height:90vh;overflow-y:auto;
   padding:2rem;box-shadow:var(--shadow);
 }
-.modal-logo{
-  display:flex;align-items:center;gap:.7rem;margin-bottom:1.5rem;
-}
+.modal-logo{display:flex;align-items:center;gap:.7rem;margin-bottom:1.5rem}
 .modal-logo-icon{
   width:40px;height:40px;border-radius:10px;
   background:linear-gradient(135deg,var(--blue),var(--purple));
@@ -52,15 +50,41 @@ body{font-family:var(--ff);background:var(--bg);color:var(--txt);display:flex;fl
 .modal-section:last-of-type{border-bottom:none;margin-bottom:1.4rem}
 .modal-section h3{font-size:.85rem;font-weight:600;color:var(--txt);margin-bottom:.4rem;display:flex;align-items:center;gap:.4rem}
 .modal-section h3 i{color:var(--blue);font-size:.8rem}
+
+/* Terms checkbox */
+.terms-check-row{
+  display:flex;align-items:center;gap:.75rem;
+  background:var(--surface);border:1px solid var(--border2);border-radius:10px;
+  padding:.8rem 1rem;margin-bottom:1.2rem;cursor:pointer;
+  transition:border-color .15s,background .15s;
+}
+.terms-check-row:hover{border-color:var(--blue-bd);background:var(--blue-bg)}
+.terms-check-box{
+  width:20px;height:20px;border-radius:5px;flex-shrink:0;
+  border:2px solid var(--border2);background:var(--bg);
+  display:flex;align-items:center;justify-content:center;
+  transition:all .15s;
+}
+.terms-check-box i{font-size:.65rem;color:#fff;opacity:0;transition:opacity .15s}
+.terms-check-row.checked .terms-check-box{
+  background:linear-gradient(135deg,var(--blue),var(--purple));
+  border-color:var(--blue);
+}
+.terms-check-row.checked .terms-check-box i{opacity:1}
+.terms-check-label{font-size:.8rem;color:var(--txt2);line-height:1.45}
+.terms-check-label strong{color:var(--txt)}
+
 .modal-btn{
   width:100%;padding:.8rem;border-radius:var(--radius);border:none;
   background:linear-gradient(135deg,var(--blue),var(--purple));
   color:#fff;font-family:var(--ff);font-size:.9rem;font-weight:700;
-  cursor:pointer;letter-spacing:-.01em;transition:opacity .15s;
+  cursor:pointer;letter-spacing:-.01em;transition:opacity .15s,transform .1s;
+  display:flex;align-items:center;justify-content:center;gap:.5rem;
 }
-.modal-btn:hover{opacity:.9}
+.modal-btn:hover:not(:disabled){opacity:.9;transform:scale(1.01)}
+.modal-btn:disabled{opacity:.35;cursor:not-allowed;transform:none}
 
-/* ── LAYOUT ── */
+/* ── NAV ── */
 nav{
   height:52px;flex-shrink:0;
   background:rgba(9,9,11,.9);border-bottom:1px solid var(--border);
@@ -76,53 +100,87 @@ nav{
   font-family:var(--fm);font-size:.65rem;font-weight:700;color:#fff;
 }
 .nav-name{font-size:.88rem;font-weight:700;letter-spacing:-.01em}
-.nav-badge{
-  font-family:var(--fm);font-size:.55rem;color:var(--txt3);
-  background:var(--surface);border:1px solid var(--border2);
-  padding:2px 8px;border-radius:20px;letter-spacing:.06em;
-}
 .nav-right{display:flex;align-items:center;gap:.5rem}
 .nav-btn{
-  display:flex;align-items:center;gap:.3rem;padding:.3rem .7rem;
+  display:flex;align-items:center;gap:.35rem;padding:.3rem .7rem;
   border-radius:6px;background:transparent;border:1px solid var(--border2);
-  font-family:var(--fm);font-size:.58rem;color:var(--txt3);cursor:pointer;
+  font-family:var(--ff);font-size:.7rem;color:var(--txt3);cursor:pointer;
   transition:all .12s;
 }
 .nav-btn:hover{background:var(--surface);color:var(--txt2);border-color:var(--lift)}
+.nav-btn i{font-size:.75rem}
 .status-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse-dot 2s infinite}
 @keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:.4}}
 
-/* ── MAIN ── */
+/* ── LAYOUT ── */
 .main{display:flex;flex:1;min-height:0}
 
-/* sidebar */
+/* ── SIDEBAR ── */
 .sidebar{
-  width:220px;flex-shrink:0;
+  width:230px;flex-shrink:0;
   background:var(--bg1);border-right:1px solid var(--border);
   display:flex;flex-direction:column;overflow:hidden;
 }
 @media(max-width:768px){.sidebar{display:none}}
-.sidebar-head{padding:.8rem 1rem .5rem;flex-shrink:0}
-.sidebar-title{font-family:var(--fm);font-size:.58rem;font-weight:600;color:var(--txt3);text-transform:uppercase;letter-spacing:.1em}
-.cap-list{flex:1;overflow-y:auto;padding:.3rem .6rem}
-.cap-item{
-  display:flex;align-items:center;gap:.55rem;
-  padding:.55rem .7rem;border-radius:8px;margin-bottom:.18rem;
-  cursor:pointer;transition:background .12s;
+
+.sidebar-head{
+  padding:.8rem .8rem .5rem;flex-shrink:0;
+  display:flex;align-items:center;justify-content:space-between;
 }
-.cap-item:hover{background:var(--surface)}
-.cap-icon{
-  width:28px;height:28px;border-radius:7px;flex-shrink:0;
-  display:flex;align-items:center;justify-content:center;font-size:.8rem;
+.sidebar-title{
+  font-family:var(--fm);font-size:.58rem;font-weight:600;
+  color:var(--txt3);text-transform:uppercase;letter-spacing:.1em;
 }
-.cap-label{font-size:.75rem;font-weight:500;color:var(--txt2)}
-.cap-desc{font-family:var(--fm);font-size:.55rem;color:var(--txt3);margin-top:1px}
+.new-chat-btn{
+  display:flex;align-items:center;gap:.3rem;
+  padding:.28rem .6rem;border-radius:6px;
+  background:var(--blue-bg);border:1px solid var(--blue-bd);
+  color:var(--blue2);font-family:var(--ff);font-size:.65rem;font-weight:600;
+  cursor:pointer;transition:all .15s;white-space:nowrap;
+}
+.new-chat-btn:hover{background:rgba(59,130,246,.18);border-color:var(--blue);color:#fff}
+.new-chat-btn i{font-size:.7rem}
+
+/* Recent chats list */
+.chat-list{flex:1;overflow-y:auto;padding:.3rem .6rem}
+.chat-list::-webkit-scrollbar{width:3px}
+.chat-list::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+
+.chat-list-empty{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:2rem 1rem;gap:.6rem;color:var(--txt3);text-align:center;
+}
+.chat-list-empty i{font-size:1.5rem;opacity:.4}
+.chat-list-empty p{font-family:var(--fm);font-size:.6rem;line-height:1.5;opacity:.6}
+
+.recent-item{
+  display:flex;align-items:center;gap:.5rem;
+  padding:.5rem .65rem;border-radius:8px;margin-bottom:.15rem;
+  cursor:pointer;transition:background .12s;position:relative;group:true;
+}
+.recent-item:hover{background:var(--surface)}
+.recent-item.active{background:var(--surface);border:1px solid var(--border2)}
+.recent-icon{
+  width:26px;height:26px;border-radius:7px;flex-shrink:0;
+  background:var(--surface);border:1px solid var(--border2);
+  display:flex;align-items:center;justify-content:center;font-size:.7rem;color:var(--txt3);
+}
+.recent-info{flex:1;min-width:0}
+.recent-title{font-size:.72rem;font-weight:500;color:var(--txt2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.recent-time{font-family:var(--fm);font-size:.52rem;color:var(--txt3);margin-top:1px}
+.recent-del{
+  opacity:0;transition:opacity .12s;
+  background:none;border:none;color:var(--txt3);cursor:pointer;padding:.2rem;
+  font-size:.65rem;border-radius:4px;flex-shrink:0;
+}
+.recent-item:hover .recent-del{opacity:1}
+.recent-del:hover{color:var(--rose);background:rgba(244,63,94,.1)}
 
 .sidebar-footer{padding:.7rem 1rem;border-top:1px solid var(--border);flex-shrink:0}
 .sidebar-footer p{font-family:var(--fm);font-size:.56rem;color:var(--txt3);line-height:1.5}
 .sidebar-footer a{color:var(--blue2);text-decoration:none}
 
-/* chat area */
+/* ── CHAT AREA ── */
 .chat-wrap{flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden}
 
 .messages{
@@ -152,11 +210,11 @@ nav{
 .suggestion-grid{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;max-width:480px;width:100%}
 .suggestion{
   background:var(--panel);border:1px solid var(--border2);border-radius:var(--radius);
-  padding:.7rem .9rem;cursor:pointer;text-align:left;
-  transition:all .15s;
+  padding:.7rem .9rem;cursor:pointer;text-align:left;transition:all .15s;
 }
 .suggestion:hover{border-color:var(--blue-bd);background:var(--blue-bg)}
-.suggestion-icon{font-size:.9rem;margin-bottom:.3rem}
+.suggestion-icon{font-size:.9rem;margin-bottom:.3rem;color:var(--txt2)}
+.suggestion-icon i{font-size:.9rem}
 .suggestion-text{font-size:.75rem;color:var(--txt2);line-height:1.4}
 
 /* messages */
@@ -168,21 +226,16 @@ nav{
   display:flex;align-items:center;justify-content:center;font-size:.8rem;
   margin-top:2px;
 }
-.msg.user .msg-avatar{background:linear-gradient(135deg,var(--blue),var(--purple));color:#fff;font-weight:700;font-size:.65rem;font-family:var(--fm)}
-.msg.assistant .msg-avatar{background:var(--surface);font-size:.9rem}
+.msg.user .msg-avatar{background:linear-gradient(135deg,var(--blue),var(--purple));color:#fff;font-weight:700;font-size:.55rem;font-family:var(--fm)}
+.msg.assistant .msg-avatar{background:var(--surface);color:var(--txt2);font-size:.8rem}
 .msg-bubble{
   max-width:72%;padding:.75rem 1rem;border-radius:12px;
   font-size:.84rem;line-height:1.65;
 }
-.msg.user .msg-bubble{
-  background:var(--blue);color:#fff;
-  border-bottom-right-radius:3px;
-}
-.msg.assistant .msg-bubble{
-  background:var(--panel);border:1px solid var(--border2);color:var(--txt);
-  border-bottom-left-radius:3px;
-}
-/* markdown in assistant bubble */
+.msg.user .msg-bubble{background:var(--blue);color:#fff;border-bottom-right-radius:3px}
+.msg.assistant .msg-bubble{background:var(--panel);border:1px solid var(--border2);color:var(--txt);border-bottom-left-radius:3px}
+
+/* markdown */
 .msg-bubble h1,.msg-bubble h2,.msg-bubble h3{color:var(--txt);font-weight:700;margin:.5rem 0 .3rem;line-height:1.2}
 .msg-bubble h1{font-size:1.1rem}.msg-bubble h2{font-size:.96rem}.msg-bubble h3{font-size:.88rem}
 .msg-bubble p{margin-bottom:.4rem;color:inherit}
@@ -201,12 +254,21 @@ nav{
 .msg-bubble hr{border:none;border-top:1px solid var(--border2);margin:.5rem 0}
 .msg-bubble blockquote{border-left:3px solid var(--blue);padding-left:.7rem;color:var(--txt2);margin:.4rem 0}
 
-/* api cards inside bubble */
+/* streaming cursor */
+.stream-cursor{
+  display:inline-block;width:2px;height:1em;background:var(--blue2);
+  margin-left:2px;vertical-align:middle;border-radius:1px;
+  animation:blink .7s ease-in-out infinite;
+}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+/* api cards */
 .weather-card{background:var(--bg2);border:1px solid var(--border2);border-radius:10px;padding:1rem;margin-top:.4rem}
 .weather-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:.6rem}
 .weather-city{font-size:1rem;font-weight:700}
 .weather-country{font-size:.7rem;color:var(--txt3);font-family:var(--fm)}
-.weather-icon{font-size:2rem}
+.weather-icon{font-size:2rem;color:var(--txt2)}
+.weather-icon i{font-size:2rem}
 .weather-temp{font-size:2rem;font-weight:800;color:var(--blue2);line-height:1}
 .weather-desc{font-size:.75rem;color:var(--txt2);text-transform:capitalize;margin-top:.1rem}
 .weather-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin-top:.7rem}
@@ -249,14 +311,12 @@ nav{
 .dict-example{font-size:.75rem;color:var(--txt3);font-style:italic;margin-top:.15rem;padding-left:.7rem;border-left:2px solid var(--border2)}
 
 /* typing indicator */
-.typing{display:flex;align-items:center;gap:.35rem;padding:.6rem .9rem}
-.typing-dot{width:6px;height:6px;border-radius:50%;background:var(--txt3);animation:typing .8s ease-in-out infinite}
+.typing{display:flex;align-items:center;gap:.35rem;padding:.3rem .1rem}
+.typing-label{font-size:.72rem;color:var(--txt3);font-family:var(--fm);margin-right:.2rem}
+.typing-dot{width:6px;height:6px;border-radius:50%;background:var(--txt3);animation:typingBounce .9s ease-in-out infinite}
 .typing-dot:nth-child(2){animation-delay:.15s}
 .typing-dot:nth-child(3){animation-delay:.3s}
-@keyframes typing{0%,80%,100%{transform:scale(.8);opacity:.4}40%{transform:scale(1);opacity:1}}
-
-/* api tag on message */
-
+@keyframes typingBounce{0%,80%,100%{transform:translateY(0) scale(.8);opacity:.4}40%{transform:translateY(-4px) scale(1);opacity:1}}
 
 /* input area */
 .input-area{
@@ -268,7 +328,9 @@ nav{
   font-family:var(--fm);font-size:.56rem;color:var(--txt3);
   background:var(--surface);border:1px solid var(--border2);
   padding:2px 7px;border-radius:4px;cursor:pointer;transition:all .12s;
+  display:flex;align-items:center;gap:.3rem;
 }
+.hint-tag i{font-size:.6rem}
 .hint-tag:hover{color:var(--txt2);border-color:var(--lift)}
 .input-row{display:flex;gap:.5rem;align-items:flex-end}
 .input-box{
@@ -282,14 +344,15 @@ nav{
 .send-btn{
   width:38px;height:38px;border-radius:9px;flex-shrink:0;
   background:var(--blue);border:none;color:#fff;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;font-size:1rem;
+  display:flex;align-items:center;justify-content:center;font-size:.9rem;
   transition:all .15s;
 }
 .send-btn:hover{background:#2563EB;transform:scale(1.05)}
 .send-btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
 .input-footer{display:flex;align-items:center;justify-content:space-between;margin-top:.4rem}
 .input-footer p{font-family:var(--fm);font-size:.54rem;color:var(--txt3)}
-.clear-btn{font-family:var(--fm);font-size:.56rem;color:var(--txt3);background:none;border:none;cursor:pointer;transition:color .12s}
+.clear-btn{font-family:var(--fm);font-size:.56rem;color:var(--txt3);background:none;border:none;cursor:pointer;transition:color .12s;display:flex;align-items:center;gap:.3rem}
+.clear-btn i{font-size:.6rem}
 .clear-btn:hover{color:var(--txt2)}
 
 /* toast */
@@ -319,30 +382,38 @@ nav{
     </div>
 
     <div class="modal-section">
-      <h3><i class="ri-shield-check-line"></i> Terms of Service</h3>
+      <h3><i class="fa-solid fa-shield-halved"></i> Terms of Service</h3>
       <p>By using ASR AI, you agree to these terms. This service is provided for personal, non-commercial use. You must not use ASR AI to generate harmful, illegal, or misleading content.</p>
     </div>
 
     <div class="modal-section">
-      <h3><i class="ri-eye-line"></i> Privacy Policy</h3>
+      <h3><i class="fa-solid fa-eye"></i> Privacy Policy</h3>
       <p>ASR AI does not store your conversations on any server. Chat history exists only in your browser session and is cleared when you close the tab. Your queries may be processed by third-party AI and data services according to their respective privacy policies.</p>
     </div>
 
     <div class="modal-section">
-      <h3><i class="ri-robot-line"></i> AI Disclaimer</h3>
+      <h3><i class="fa-solid fa-robot"></i> AI Disclaimer</h3>
       <p>ASR AI uses advanced AI models and may occasionally produce inaccurate information. Always verify important information from authoritative sources. Do not rely on ASR AI for medical, legal, or financial decisions.</p>
     </div>
 
-
-
     <div class="modal-section">
-      <h3><i class="ri-information-line"></i> Acceptable Use</h3>
+      <h3><i class="fa-solid fa-circle-info"></i> Acceptable Use</h3>
       <p>You agree not to use ASR AI to violate any laws, infringe intellectual property rights, harass or harm others, or attempt to reverse-engineer the service. Misuse may result in access termination.</p>
     </div>
 
-    <p style="font-size:.75rem;color:var(--txt3);margin-bottom:1.2rem">Built by <strong style="color:var(--txt2)">Anurag Rajput</strong> · ASR AI v1.0 · By continuing you accept these terms.</p>
-    <button class="modal-btn" onclick="acceptTerms()">
-      <i class="ri-check-line"></i> I Agree — Start Chatting
+    <!-- Tick checkbox -->
+    <div class="terms-check-row" id="terms-check-row" onclick="toggleTermsCheck()">
+      <div class="terms-check-box" id="terms-check-box">
+        <i class="fa-solid fa-check"></i>
+      </div>
+      <div class="terms-check-label">
+        I have read and agree to the <strong>Terms of Service</strong>, <strong>Privacy Policy</strong>, and <strong>AI Disclaimer</strong> above.
+      </div>
+    </div>
+
+    <p style="font-size:.75rem;color:var(--txt3);margin-bottom:1.2rem">Built by <strong style="color:var(--txt2)">Anurag Rajput</strong> · ASR AI v1.0</p>
+    <button class="modal-btn" id="terms-agree-btn" onclick="acceptTerms()" disabled>
+      <i class="fa-solid fa-check"></i> I Agree — Start Chatting
     </button>
   </div>
 </div>
@@ -352,15 +423,14 @@ nav{
   <div class="nav-brand">
     <div class="nav-icon">A</div>
     <span class="nav-name">ASR AI</span>
-    
   </div>
   <div class="nav-right">
     <div style="display:flex;align-items:center;gap:.4rem">
       <div class="status-dot"></div>
       <span style="font-family:var(--fm);font-size:.58rem;color:var(--txt3)">Online</span>
     </div>
-    <button class="nav-btn" onclick="clearChat()"><i class="ri-refresh-line"></i> New Chat</button>
-    <button class="nav-btn" onclick="showTerms()"><i class="ri-shield-line"></i> Terms</button>
+    <button class="nav-btn" onclick="newChat()"><i class="fa-solid fa-plus"></i> New Chat</button>
+    <button class="nav-btn" onclick="showTerms()"><i class="fa-solid fa-shield-halved"></i> Terms</button>
   </div>
 </nav>
 
@@ -368,36 +438,15 @@ nav{
   <!-- SIDEBAR -->
   <aside class="sidebar">
     <div class="sidebar-head">
-      <div class="sidebar-title">Capabilities</div>
+      <div class="sidebar-title">Recent Chats</div>
+      <button class="new-chat-btn" onclick="newChat()">
+        <i class="fa-solid fa-plus"></i> New
+      </button>
     </div>
-    <div class="cap-list">
-      <div class="cap-item" onclick="insertPrompt('Tell me a joke')">
-        <div class="cap-icon" style="background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.25)">😄</div>
-        <div><div class="cap-label">Jokes</div><div class="cap-desc">Tell me a joke</div></div>
-      </div>
-      <div class="cap-item" onclick="insertPrompt('Weather in Delhi')">
-        <div class="cap-icon" style="background:rgba(6,182,212,.12);border:1px solid rgba(6,182,212,.25)">🌤</div>
-        <div><div class="cap-label">Weather</div><div class="cap-desc">Live conditions</div></div>
-      </div>
-      <div class="cap-item" onclick="insertPrompt('Latest technology news')">
-        <div class="cap-icon" style="background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.25)">📰</div>
-        <div><div class="cap-label">News</div><div class="cap-desc">Breaking headlines</div></div>
-      </div>
-      <div class="cap-item" onclick="insertPrompt('Search for best Python projects on GitHub')">
-        <div class="cap-icon" style="background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.25)">🔍</div>
-        <div><div class="cap-label">Web Search</div><div class="cap-desc">Google results</div></div>
-      </div>
-      <div class="cap-item" onclick="insertPrompt('Show me photos of mountains')">
-        <div class="cap-icon" style="background:rgba(168,85,247,.12);border:1px solid rgba(168,85,247,.25)">🖼</div>
-        <div><div class="cap-label">Images</div><div class="cap-desc">High-quality photos</div></div>
-      </div>
-      <div class="cap-item" onclick="insertPrompt('Define serendipity')">
-        <div class="cap-icon" style="background:rgba(244,63,94,.12);border:1px solid rgba(244,63,94,.25)">📖</div>
-        <div><div class="cap-label">Dictionary</div><div class="cap-desc">Word meanings</div></div>
-      </div>
-      <div class="cap-item" onclick="insertPrompt('Write a Python function to sort a list')">
-        <div class="cap-icon" style="background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.25)">💬</div>
-        <div><div class="cap-label">AI Chat</div><div class="cap-desc">Code, reasoning</div></div>
+    <div class="chat-list" id="chat-list">
+      <div class="chat-list-empty" id="chat-list-empty">
+        <i class="fa-regular fa-comments"></i>
+        <p>No recent chats yet.<br>Start a conversation!</p>
       </div>
     </div>
     <div class="sidebar-footer">
@@ -414,19 +463,19 @@ nav{
         <p>Your intelligent multi-API assistant. Ask me anything — I can chat, search the web, get weather, fetch news, find images, tell jokes, and define words.</p>
         <div class="suggestion-grid">
           <div class="suggestion" onclick="insertPrompt('What\'s the weather in Mumbai today?')">
-            <div class="suggestion-icon">🌤</div>
+            <div class="suggestion-icon"><i class="fa-solid fa-cloud-sun"></i></div>
             <div class="suggestion-text">Weather in Mumbai today</div>
           </div>
           <div class="suggestion" onclick="insertPrompt('Latest AI news')">
-            <div class="suggestion-icon">📰</div>
+            <div class="suggestion-icon"><i class="fa-solid fa-newspaper"></i></div>
             <div class="suggestion-text">Latest AI news</div>
           </div>
           <div class="suggestion" onclick="insertPrompt('Show me photos of sunset')">
-            <div class="suggestion-icon">🖼</div>
+            <div class="suggestion-icon"><i class="fa-solid fa-image"></i></div>
             <div class="suggestion-text">Show me photos of sunset</div>
           </div>
           <div class="suggestion" onclick="insertPrompt('Tell me a funny joke')">
-            <div class="suggestion-icon">😄</div>
+            <div class="suggestion-icon"><i class="fa-solid fa-face-laugh"></i></div>
             <div class="suggestion-text">Tell me a funny joke</div>
           </div>
         </div>
@@ -435,35 +484,45 @@ nav{
 
     <div class="input-area">
       <div class="input-hint">
-        <span class="hint-tag" onclick="insertPrompt('Weather in ')">🌤 Weather</span>
-        <span class="hint-tag" onclick="insertPrompt('Latest news about ')">📰 News</span>
-        <span class="hint-tag" onclick="insertPrompt('Search for ')">🔍 Search</span>
-        <span class="hint-tag" onclick="insertPrompt('Show me photos of ')">🖼 Images</span>
-        <span class="hint-tag" onclick="insertPrompt('Define ')">📖 Define</span>
-        <span class="hint-tag" onclick="insertPrompt('Tell me a joke')">😄 Joke</span>
-        <span class="hint-tag" onclick="insertPrompt('Explain ')">💬 Explain</span>
-        <span class="hint-tag" onclick="insertPrompt('Write code for ')">💻 Code</span>
+        <span class="hint-tag" onclick="insertPrompt('Weather in ')"><i class="fa-solid fa-cloud-sun"></i> Weather</span>
+        <span class="hint-tag" onclick="insertPrompt('Latest news about ')"><i class="fa-solid fa-newspaper"></i> News</span>
+        <span class="hint-tag" onclick="insertPrompt('Search for ')"><i class="fa-solid fa-magnifying-glass"></i> Search</span>
+        <span class="hint-tag" onclick="insertPrompt('Show me photos of ')"><i class="fa-solid fa-images"></i> Images</span>
+        <span class="hint-tag" onclick="insertPrompt('Define ')"><i class="fa-solid fa-book-open"></i> Define</span>
+        <span class="hint-tag" onclick="insertPrompt('Tell me a joke')"><i class="fa-solid fa-face-laugh"></i> Joke</span>
+        <span class="hint-tag" onclick="insertPrompt('Explain ')"><i class="fa-solid fa-comment-dots"></i> Explain</span>
+        <span class="hint-tag" onclick="insertPrompt('Write code for ')"><i class="fa-solid fa-code"></i> Code</span>
       </div>
       <div class="input-row">
         <textarea class="input-box" id="input" placeholder="Ask me anything..." rows="1" onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
         <button class="send-btn" id="send-btn" onclick="sendMessage()">
-          <i class="ri-send-plane-fill"></i>
+          <i class="fa-solid fa-paper-plane"></i>
         </button>
       </div>
       <div class="input-footer">
         <p>ASR AI can make mistakes. Verify important info.</p>
-        <button class="clear-btn" onclick="clearChat()"><i class="ri-delete-bin-line"></i> Clear chat</button>
+        <button class="clear-btn" onclick="clearChat()"><i class="fa-solid fa-trash-can"></i> Clear chat</button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- TOAST -->
-<div class="toast" id="toast"><i class="ri-checkbox-circle-line"></i><span id="toast-txt"></span></div>
+<div class="toast" id="toast"><i class="fa-solid fa-circle-check"></i><span id="toast-txt"></span></div>
 
 <script>
 // ── TERMS ──
+let termsChecked = false;
+
+function toggleTermsCheck() {
+  termsChecked = !termsChecked;
+  const row = document.getElementById('terms-check-row');
+  const btn = document.getElementById('terms-agree-btn');
+  row.classList.toggle('checked', termsChecked);
+  btn.disabled = !termsChecked;
+}
+
 function acceptTerms() {
+  if (!termsChecked) return;
   localStorage.setItem('asr_terms', '1');
   document.getElementById('terms-modal').style.display = 'none';
 }
@@ -474,16 +533,157 @@ if (localStorage.getItem('asr_terms')) {
   document.getElementById('terms-modal').style.display = 'none';
 }
 
-// ── CHAT STATE ──
+// ── CHAT SESSION MANAGEMENT ──
 let history = [];
 let isLoading = false;
+let currentSessionId = null;
+let sessions = JSON.parse(localStorage.getItem('asr_sessions') || '[]');
+
+function generateId() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+}
+
+function saveSessions() {
+  localStorage.setItem('asr_sessions', JSON.stringify(sessions));
+}
+
+function getSessionTitle(message) {
+  return message.length > 40 ? message.slice(0, 40) + '…' : message;
+}
+
+function getSessionIcon(message) {
+  const m = message.toLowerCase();
+  if (/weather|temperature|forecast|rain|snow|cloud/.test(m)) return 'fa-cloud-sun';
+  if (/news|headline|latest|breaking/.test(m)) return 'fa-newspaper';
+  if (/photo|image|picture|pic|show/.test(m)) return 'fa-image';
+  if (/joke|funny|laugh|humor/.test(m)) return 'fa-face-laugh';
+  if (/define|meaning|dictionary/.test(m)) return 'fa-book-open';
+  if (/search|google|find|look up/.test(m)) return 'fa-magnifying-glass';
+  if (/code|program|function|script/.test(m)) return 'fa-code';
+  return 'fa-comment';
+}
+
+function timeAgo(ts) {
+  const diff = Date.now() - ts;
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  return `${Math.floor(hrs / 24)}d ago`;
+}
+
+function renderChatList() {
+  const list = document.getElementById('chat-list');
+  const empty = document.getElementById('chat-list-empty');
+
+  // Remove all non-empty items
+  list.querySelectorAll('.recent-item').forEach(el => el.remove());
+
+  if (sessions.length === 0) {
+    empty.style.display = 'flex';
+    return;
+  }
+  empty.style.display = 'none';
+
+  // Render newest first
+  [...sessions].reverse().forEach(sess => {
+    const item = document.createElement('div');
+    item.className = 'recent-item' + (sess.id === currentSessionId ? ' active' : '');
+    item.dataset.id = sess.id;
+    item.innerHTML = `
+      <div class="recent-icon"><i class="fa-solid ${sess.icon || 'fa-comment'}"></i></div>
+      <div class="recent-info">
+        <div class="recent-title">${escapeHtml(sess.title)}</div>
+        <div class="recent-time">${timeAgo(sess.ts)}</div>
+      </div>
+      <button class="recent-del" title="Delete" onclick="deleteSession('${sess.id}', event)">
+        <i class="fa-solid fa-xmark"></i>
+      </button>`;
+    item.addEventListener('click', () => loadSession(sess.id));
+    list.appendChild(item);
+  });
+}
+
+function escapeHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function deleteSession(id, e) {
+  e.stopPropagation();
+  sessions = sessions.filter(s => s.id !== id);
+  saveSessions();
+  if (currentSessionId === id) {
+    currentSessionId = null;
+    history = [];
+    resetToWelcome();
+  }
+  renderChatList();
+  toast('Chat deleted');
+}
+
+function loadSession(id) {
+  const sess = sessions.find(s => s.id === id);
+  if (!sess) return;
+  currentSessionId = id;
+  history = sess.history || [];
+
+  // Rebuild messages DOM
+  const msgs = document.getElementById('messages');
+  msgs.innerHTML = '';
+  (sess.messages || []).forEach(m => {
+    addMsgDOM(m.role, m.html || m.content, m.html ? true : false);
+  });
+  renderChatList();
+  scrollToBottom();
+}
+
+function newChat() {
+  currentSessionId = null;
+  history = [];
+  resetToWelcome();
+  renderChatList();
+  document.getElementById('input').focus();
+}
+
+function resetToWelcome() {
+  document.getElementById('messages').innerHTML = `
+    <div class="welcome" id="welcome">
+      <div class="welcome-logo">A</div>
+      <h1>ASR AI</h1>
+      <p>Your intelligent multi-API assistant. Ask me anything — I can chat, search the web, get weather, fetch news, find images, tell jokes, and define words.</p>
+      <div class="suggestion-grid">
+        <div class="suggestion" onclick="insertPrompt('What\\'s the weather in Mumbai today?')">
+          <div class="suggestion-icon"><i class="fa-solid fa-cloud-sun"></i></div>
+          <div class="suggestion-text">Weather in Mumbai today</div>
+        </div>
+        <div class="suggestion" onclick="insertPrompt('Latest AI news')">
+          <div class="suggestion-icon"><i class="fa-solid fa-newspaper"></i></div>
+          <div class="suggestion-text">Latest AI news</div>
+        </div>
+        <div class="suggestion" onclick="insertPrompt('Show me photos of sunset')">
+          <div class="suggestion-icon"><i class="fa-solid fa-image"></i></div>
+          <div class="suggestion-text">Show me photos of sunset</div>
+        </div>
+        <div class="suggestion" onclick="insertPrompt('Tell me a funny joke')">
+          <div class="suggestion-icon"><i class="fa-solid fa-face-laugh"></i></div>
+          <div class="suggestion-text">Tell me a funny joke</div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function clearChat() {
+  newChat();
+  toast('Chat cleared');
+}
 
 // ── TOAST ──
 function toast(msg, ok = true) {
   const t = document.getElementById('toast');
   const i = t.querySelector('i');
   document.getElementById('toast-txt').textContent = ' ' + msg;
-  i.className = ok ? 'ri-checkbox-circle-line' : 'ri-error-warning-line';
+  i.className = ok ? 'fa-solid fa-circle-check' : 'fa-solid fa-triangle-exclamation';
   i.style.color = ok ? 'var(--green)' : 'var(--rose)';
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 2800);
@@ -512,23 +712,6 @@ function scrollToBottom() {
   m.scrollTop = m.scrollHeight;
 }
 
-function clearChat() {
-  history = [];
-  const m = document.getElementById('messages');
-  m.innerHTML = `<div class="welcome" id="welcome">
-    <div class="welcome-logo">A</div>
-    <h1>ASR AI</h1>
-    <p>Your intelligent multi-API assistant. Ask me anything — I can chat, search the web, get weather, fetch news, find images, tell jokes, and define words.</p>
-    <div class="suggestion-grid">
-      <div class="suggestion" onclick="insertPrompt('What\\'s the weather in Mumbai today?')"><div class="suggestion-icon">🌤</div><div class="suggestion-text">Weather in Mumbai today</div></div>
-      <div class="suggestion" onclick="insertPrompt('Latest AI news')"><div class="suggestion-icon">📰</div><div class="suggestion-text">Latest AI news</div></div>
-      <div class="suggestion" onclick="insertPrompt('Show me photos of sunset')"><div class="suggestion-icon">🖼</div><div class="suggestion-text">Show me photos of sunset</div></div>
-      <div class="suggestion" onclick="insertPrompt('Tell me a funny joke')"><div class="suggestion-icon">😄</div><div class="suggestion-text">Tell me a funny joke</div></div>
-    </div>
-  </div>`;
-  toast('Chat cleared');
-}
-
 // ── MARKDOWN PARSER ──
 function md(text) {
   return text
@@ -553,7 +736,19 @@ function md(text) {
     }).join('\n');
 }
 
-
+// ── WEATHER ICON using Font Awesome ──
+function getWeatherIcon(code, isDay) {
+  if (code === 1000) return isDay ? '<i class="fa-solid fa-sun" style="color:var(--amber)"></i>' : '<i class="fa-solid fa-moon" style="color:var(--txt2)"></i>';
+  if (code <= 1009) return isDay ? '<i class="fa-solid fa-cloud-sun" style="color:var(--amber)"></i>' : '<i class="fa-solid fa-cloud-moon" style="color:var(--txt2)"></i>';
+  if (code <= 1030) return '<i class="fa-solid fa-smog" style="color:var(--txt3)"></i>';
+  if (code <= 1069) return '<i class="fa-solid fa-cloud-rain" style="color:var(--cyan)"></i>';
+  if (code <= 1117) return '<i class="fa-solid fa-snowflake" style="color:#bfdbfe"></i>';
+  if (code <= 1135) return '<i class="fa-solid fa-smog" style="color:var(--txt3)"></i>';
+  if (code <= 1225) return '<i class="fa-solid fa-cloud-snow" style="color:#bfdbfe"></i>';
+  if (code <= 1264) return '<i class="fa-solid fa-cloud-showers-heavy" style="color:var(--cyan)"></i>';
+  if (code <= 1282) return '<i class="fa-solid fa-cloud-bolt" style="color:var(--amber)"></i>';
+  return '<i class="fa-solid fa-thermometer-half" style="color:var(--rose)"></i>';
+}
 
 // ── RENDER RESPONSE ──
 function renderResponse(data) {
@@ -574,7 +769,7 @@ function renderResponse(data) {
           <div class="weather-temp">${Math.round(c.temp_c)}°C</div>
           <div class="weather-desc">${c.condition.text}</div>
         </div>
-        <div class="weather-icon">${condIcon}</div>
+        <div class="weather-icon" style="font-size:2.5rem">${condIcon}</div>
       </div>
       <div class="weather-grid">
         <div class="weather-stat"><div class="weather-stat-val">${Math.round(c.feelslike_c)}°C</div><div class="weather-stat-lbl">Feels Like</div></div>
@@ -617,7 +812,7 @@ function renderResponse(data) {
   else if (data.type === 'joke') {
     const parts = data.text.split('\n\n');
     inner = `<div class="joke-card">
-      <div class="joke-category">${data.category || 'Misc'}</div>
+      <div class="joke-category"><i class="fa-solid fa-masks-theater" style="margin-right:.3rem"></i>${data.category || 'Misc'}</div>
       ${parts.length > 1
         ? `<div class="joke-setup">${parts[0]}</div><div class="joke-punchline">${parts[1]}</div>`
         : `<div class="joke-setup">${data.text}</div>`}
@@ -646,21 +841,8 @@ function renderResponse(data) {
   return inner;
 }
 
-function getWeatherIcon(code, isDay) {
-  if (code === 1000) return isDay ? '☀️' : '🌙';
-  if (code <= 1009) return isDay ? '⛅' : '☁️';
-  if (code <= 1030) return '🌫️';
-  if (code <= 1069) return '🌧️';
-  if (code <= 1117) return '❄️';
-  if (code <= 1135) return '🌫️';
-  if (code <= 1225) return '🌨️';
-  if (code <= 1264) return '🌧️';
-  if (code <= 1282) return '⛈️';
-  return '🌡️';
-}
-
-// ── ADD MESSAGE TO DOM ──
-function addMsg(role, content, isHTML = false) {
+// ── ADD MESSAGE TO DOM (shared between live and replay) ──
+function addMsgDOM(role, content, isHTML = false) {
   const welcome = document.getElementById('welcome');
   if (welcome) welcome.remove();
 
@@ -669,8 +851,8 @@ function addMsg(role, content, isHTML = false) {
   div.className = `msg ${role}`;
 
   const avatarContent = role === 'user'
-    ? '<span style="font-size:.6rem;font-weight:700">YOU</span>'
-    : '🤖';
+    ? '<i class="fa-solid fa-user" style="font-size:.65rem"></i>'
+    : '<i class="fa-solid fa-robot" style="font-size:.75rem"></i>';
 
   div.innerHTML = `
     <div class="msg-avatar">${avatarContent}</div>
@@ -681,7 +863,31 @@ function addMsg(role, content, isHTML = false) {
   return div;
 }
 
-// ── TYPING ──
+// ── STREAMING TEXT EFFECT ──
+async function streamText(bubble, text) {
+  // Show cursor
+  bubble.innerHTML = '<span class="stream-cursor"></span>';
+  const words = text.split(/(\s+)/);
+  let displayed = '';
+  for (let i = 0; i < words.length; i++) {
+    displayed += words[i];
+    // Render markdown on the accumulated text, append cursor
+    bubble.innerHTML = md(displayed) + '<span class="stream-cursor"></span>';
+    scrollToBottom();
+    // Speed: ~25ms per chunk, faster for spaces
+    const isSpace = /^\s+$/.test(words[i]);
+    if (!isSpace) await sleep(18 + Math.random() * 14);
+  }
+  // Final render without cursor
+  bubble.innerHTML = md(text);
+  scrollToBottom();
+}
+
+function sleep(ms) {
+  return new Promise(r => setTimeout(r, ms));
+}
+
+// ── TYPING INDICATOR ──
 function addTyping() {
   const welcome = document.getElementById('welcome');
   if (welcome) welcome.remove();
@@ -691,9 +897,10 @@ function addTyping() {
   div.className = 'msg assistant';
   div.id = 'typing-indicator';
   div.innerHTML = `
-    <div class="msg-avatar">🤖</div>
+    <div class="msg-avatar"><i class="fa-solid fa-robot" style="font-size:.75rem"></i></div>
     <div class="msg-bubble">
       <div class="typing">
+        <span class="typing-label">Thinking</span>
         <div class="typing-dot"></div>
         <div class="typing-dot"></div>
         <div class="typing-dot"></div>
@@ -721,10 +928,30 @@ async function sendMessage() {
   document.getElementById('send-btn').disabled = true;
 
   // Add user message
-  addMsg('user', message);
+  addMsgDOM('user', message);
   history.push({ role: 'user', content: message });
 
-  // Show typing
+  // Create / update session
+  const isFirstMsg = !currentSessionId;
+  if (isFirstMsg) {
+    currentSessionId = generateId();
+    sessions.push({
+      id: currentSessionId,
+      title: getSessionTitle(message),
+      icon: getSessionIcon(message),
+      ts: Date.now(),
+      history: [],
+      messages: []
+    });
+  }
+  // Save user message to session
+  const sess = sessions.find(s => s.id === currentSessionId);
+  if (sess) {
+    sess.messages = sess.messages || [];
+    sess.messages.push({ role: 'user', content: message, html: false });
+  }
+
+  renderChatList();
   addTyping();
 
   try {
@@ -738,18 +965,56 @@ async function sendMessage() {
     removeTyping();
 
     if (!res.ok || data.error) {
-      addMsg('assistant', `❌ **Error:** ${data.error || 'Something went wrong. Please try again.'}`);
+      const errMsg = `**Error:** ${data.error || 'Something went wrong. Please try again.'}`;
+      // Show error with stream effect
+      const div = document.createElement('div');
+      div.className = 'msg assistant';
+      div.innerHTML = `<div class="msg-avatar"><i class="fa-solid fa-robot" style="font-size:.75rem"></i></div><div class="msg-bubble"></div>`;
+      document.getElementById('messages').appendChild(div);
+      await streamText(div.querySelector('.msg-bubble'), errMsg);
     } else {
+      const isRich = data.type !== 'chat';
       const html = renderResponse(data);
-      addMsg('assistant', html, true);
 
-      // Store text in history
+      if (isRich) {
+        // Rich cards: show immediately (no streaming for cards/images)
+        addMsgDOM('assistant', html, true);
+        if (sess) sess.messages.push({ role: 'assistant', html: html });
+      } else {
+        // Chat text: stream word by word
+        const welcome = document.getElementById('welcome');
+        if (welcome) welcome.remove();
+
+        const msgs = document.getElementById('messages');
+        const div = document.createElement('div');
+        div.className = 'msg assistant';
+        div.innerHTML = `<div class="msg-avatar"><i class="fa-solid fa-robot" style="font-size:.75rem"></i></div><div class="msg-bubble"></div>`;
+        msgs.appendChild(div);
+        const bubble = div.querySelector('.msg-bubble');
+        await streamText(bubble, data.text || '');
+        if (sess) sess.messages.push({ role: 'assistant', html: md(data.text || '') });
+      }
+
       const histText = data.text || `[${data.type} response]`;
       history.push({ role: 'assistant', content: histText });
+
+      // Update session history
+      if (sess) {
+        sess.history = history.slice();
+        sess.ts = Date.now();
+      }
     }
+
+    saveSessions();
+    renderChatList();
+
   } catch (e) {
     removeTyping();
-    addMsg('assistant', '❌ **Connection error.** Make sure you\'re connected to the internet and try again.');
+    const div = document.createElement('div');
+    div.className = 'msg assistant';
+    div.innerHTML = `<div class="msg-avatar"><i class="fa-solid fa-robot" style="font-size:.75rem"></i></div><div class="msg-bubble"></div>`;
+    document.getElementById('messages').appendChild(div);
+    await streamText(div.querySelector('.msg-bubble'), '**Connection error.** Make sure you\'re connected to the internet and try again.');
     console.error(e);
   }
 
@@ -757,6 +1022,9 @@ async function sendMessage() {
   document.getElementById('send-btn').disabled = false;
   document.getElementById('input').focus();
 }
+
+// ── INIT ──
+renderChatList();
 </script>
 </body>
 </html>
