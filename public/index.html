@@ -400,6 +400,82 @@ nav{
 }
 .toast.show{transform:translateY(0);opacity:1}
 .toast i{color:var(--green)}
+:root.light-theme {
+  /* Backgrounds – warmer and softer */
+  --bg: #f5f7fb;
+  --bg1: #eef2f7;
+  --bg2: #e6ebf2;
+
+  /* Surfaces */
+  --panel: #ffffff;
+  --surface: #f8fafc;
+  --lift: #ffffff;
+
+  /* Borders – subtle */
+  --border: #e2e8f0;
+  --border2: #d6dee8;
+
+  /* Text – comfortable contrast */
+  --txt: #0f172a;
+  --txt2: #334155;
+  --txt3: #64748b;
+
+  /* Accent – unchanged */
+  --blue: #3b82f6;
+  --blue2: #2563eb;
+  --blue-bg: rgba(59,130,246,0.08);
+  --blue-bd: rgba(59,130,246,0.2);
+}
+
+/* Light‑theme specific element overrides */
+.light-theme {
+  /* Main chat area background */
+  .chat-wrap {
+    background: var(--bg);
+  }
+
+  /* Sidebar background & border */
+  .sidebar {
+    background: var(--bg1);
+    border-right: 1px solid var(--border);
+  }
+
+  /* All card‑like components */
+  .weather-card,
+  .news-card,
+  .joke-card,
+  .dict-card,
+  .search-item,
+  .suggestion {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  }
+
+  /* Input area */
+  .input-area {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 12px;
+  }
+
+  /* Navbar – glassy effect */
+  nav {
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* Buttons hover effect – subtle */
+  .nav-btn:hover,
+  .send-btn:hover,
+  .new-chat-btn:hover,
+  .recent-del:hover,
+  .copy-btn:hover {
+    background: var(--blue-bg);
+  }
+}
 </style>
 </head>
 <body>
@@ -510,6 +586,9 @@ nav{
       <span style="font-family:var(--fm);font-size:.58rem;color:var(--txt3)">Online</span>
     </div>
     <button class="nav-btn" onclick="newChat()"><i class="fa-solid fa-plus"></i> New Chat</button>
+    <button class="nav-btn" id="theme-toggle">
+  <i class="fa-solid fa-moon"></i>
+</button>
   </div>
 </nav>
 
@@ -1218,6 +1297,21 @@ function toggleSidebar() {
 
 // ── INIT ──
 renderChatList();
+// Theme toggle
+const themeToggle = document.getElementById('theme-toggle');
+const currentTheme = localStorage.getItem('theme') || 'dark';
+
+if (currentTheme === 'light') {
+  document.documentElement.classList.add('light-theme');
+  themeToggle.innerHTML = '<i class="fa-solid fa-sun"></i>';
+}
+
+themeToggle.addEventListener('click', () => {
+  const isLight = document.documentElement.classList.toggle('light-theme');
+  const newTheme = isLight ? 'light' : 'dark';
+  localStorage.setItem('theme', newTheme);
+  themeToggle.innerHTML = isLight ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
+});
 </script>
 </body>
 </html>
