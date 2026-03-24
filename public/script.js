@@ -91,7 +91,7 @@ function renderChatList() {
 }
 
 function escapeHtml(str) {
-  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
 function deleteSession(id, e) {
@@ -225,28 +225,28 @@ function scrollToBottom(force = false) {
 // ── MARKDOWN PARSER ──
 function md(text) {
   return text
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-    .replace(/```(\w*)\n([\s\S]*?)```/g,(_,lang,code)=>{
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/```(\w*)\n([\s\S]*?)```/g, (_, lang, code) => {
       const escaped = code.trim();
       const langLabel = lang ? `<span class="code-lang">${lang}</span>` : '';
       return `<div class="code-block">${langLabel}<pre><code>${escaped}</code></pre><button class="copy-btn" onclick="copyCode(this)"><i class="fa-regular fa-copy"></i> Copy</button></div>`;
     })
-    .replace(/`([^`]+)`/g,'<code>$1</code>')
-    .replace(/^### (.+)$/gm,'<h3>$1</h3>')
-    .replace(/^## (.+)$/gm,'<h2>$1</h2>')
-    .replace(/^# (.+)$/gm,'<h1>$1</h1>')
-    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
-    .replace(/\*(.+?)\*/g,'<em>$1</em>')
-    .replace(/^---$/gm,'<hr>')
-    .replace(/\[([^\]]+)\]\(([^)]+)\)/g,'<a href="$2" target="_blank">$1</a>')
-    .replace(/^[-*] (.+)$/gm,'<li>$1</li>')
-    .replace(/^\d+\. (.+)$/gm,'<li>$1</li>')
-    .replace(/(<li>.*<\/li>\n?)+/g,m=>`<ul>${m}</ul>`)
-    .replace(/^> (.+)$/gm,'<blockquote>$1</blockquote>')
-    .split('\n\n').map(b=>{
-      if(/^<(h[1-6]|ul|ol|pre|hr|blockquote|div)/.test(b.trim()))return b;
-      if(!b.trim())return'';
-      return`<p>${b.replace(/\n/g,'<br>')}</p>`;
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+    .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+    .replace(/^# (.+)$/gm, '<h1>$1</h1>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/^---$/gm, '<hr>')
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>')
+    .replace(/^[-*] (.+)$/gm, '<li>$1</li>')
+    .replace(/^\d+\. (.+)$/gm, '<li>$1</li>')
+    .replace(/(<li>.*<\/li>\n?)+/g, m => `<ul>${m}</ul>`)
+    .replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>')
+    .split('\n\n').map(b => {
+      if (/^<(h[1-6]|ul|ol|pre|hr|blockquote|div)/.test(b.trim())) return b;
+      if (!b.trim()) return '';
+      return `<p>${b.replace(/\n/g, '<br>')}</p>`;
     }).join('\n');
 }
 
@@ -296,53 +296,106 @@ function renderResponse(data) {
     </div>`;
   }
   else if (data.type === 'news') {
-    const arts = (data.articles || []).filter(a => a.title && a.title !== '[Removed]').slice(0,5);
+    const arts = (data.articles || []).filter(a => a.title && a.title !== '[Removed]').slice(0, 5);
     inner = `<p style="font-size:.78rem;color:var(--txt2);margin-bottom:.4rem">Top stories ${data.topic ? 'about <strong>' + data.topic + '</strong>' : ''}</p>
-    <div class="news-grid">${arts.map(a=>`
+    <div class="news-grid">${arts.map(a => `
       <a class="news-card" href="${a.url}" target="_blank">
         <div class="news-source">${a.source?.name || 'News'}</div>
         <div class="news-title">${a.title}</div>
-        ${a.description ? `<div class="news-desc">${a.description.slice(0,100)}...</div>` : ''}
+        ${a.description ? `<div class="news-desc">${a.description.slice(0, 100)}...</div>` : ''}
       </a>`).join('')}</div>`;
   }
+  else if (data.type === 'ai_image') {
+
+  const loaderId = `img-loading-${Date.now()}`;
+
+  inner = `
+    <div style="margin-top:.4rem">
+
+      <p style="font-size:.78rem;color:var(--txt2);margin-bottom:.6rem">
+        <i class="fa-solid fa-wand-magic-sparkles" style="color:var(--purple);margin-right:.4rem"></i>
+        Generated: <strong>${data.prompt}</strong>
+      </p>
+
+      <div style="border-radius:12px;overflow:hidden;max-width:512px;border:1px solid var(--border2);position:relative">
+
+        <!-- ✅ Loader -->
+        <div id="${loaderId}" 
+          style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:var(--bg2);border-radius:12px;font-size:.75rem;color:var(--txt3);gap:.5rem">
+          <i class="fa-solid fa-spinner fa-spin"></i> Generating image...
+        </div>
+
+        <!-- ✅ Image -->
+        <img
+          src="${data.url}"
+          alt="${data.prompt}"
+          style="width:100%;display:block;border-radius:12px"
+
+          onload="
+            document.getElementById('${loaderId}').style.display='none';
+          "
+
+          onerror="
+            console.log('Main image failed');
+
+            if (!this.dataset.fallbackUsed && '${data.fallback}') {
+              this.dataset.fallbackUsed = 'true';
+              console.log('Switching to fallback...');
+              this.src='${data.fallback}';
+            } else {
+              document.getElementById('${loaderId}').innerHTML =
+                '<i class=\\'fa-solid fa-triangle-exclamation\\'></i> Failed to load image';
+            }
+          "
+        >
+
+      </div>
+
+      <p style="font-family:var(--fm);font-size:.54rem;color:var(--txt3);margin-top:.4rem">
+        <i class="fa-solid fa-circle-info"></i> AI Image (Auto fallback enabled)
+      </p>
+
+    </div>
+  `;
+}
   else if (data.type === 'images') {
-    const photos = data.photos || [];
-    inner = `<p style="font-size:.78rem;color:var(--txt2);margin-bottom:.4rem">Photos of <strong>${data.query}</strong></p>
-    <div class="img-grid">${photos.map(p=>`
+      const photos = data.photos || [];
+      inner = `<p style="font-size:.78rem;color:var(--txt2);margin-bottom:.4rem">Photos of <strong>${data.query}</strong></p>
+    <div class="img-grid">${photos.map(p => `
       <div class="img-item" onclick="window.open('${p.links?.html}','_blank')">
         <img src="${p.urls?.small}" alt="${p.alt_description || data.query}" loading="lazy">
       </div>`).join('')}</div>
     <p style="font-family:var(--fm);font-size:.54rem;color:var(--txt3);margin-top:.4rem">Click any photo to view full size</p>`;
-  }
-  else if (data.type === 'search') {
-    inner = `${data.snippet ? `<div class="search-answer"><p>${data.snippet}</p></div>` : ''}
-    <div class="search-results">${(data.results || []).map(r=>`
+    }
+    else if (data.type === 'search') {
+      inner = `${data.snippet ? `<div class="search-answer"><p>${data.snippet}</p></div>` : ''}
+    <div class="search-results">${(data.results || []).map(r => `
       <a class="search-item" href="${r.link}" target="_blank">
         <div class="search-item-title">${r.title}</div>
-        <div class="search-item-url">${r.link?.slice(0,50)}...</div>
+        <div class="search-item-url">${r.link?.slice(0, 50)}...</div>
         <div class="search-item-snippet">${r.snippet || ''}</div>
       </a>`).join('')}</div>`;
-  }
-  else if (data.type === 'joke') {
-    const parts = data.text.split('\n\n');
-    inner = `<div class="joke-card">
+    }
+    else if (data.type === 'joke') {
+      const parts = data.text.split('\n\n');
+      inner = `<div class="joke-card">
       <div class="joke-category"><i class="fa-solid fa-masks-theater" style="margin-right:.3rem"></i>${data.category || 'Misc'}</div>
       ${parts.length > 1
-        ? `<div class="joke-setup">${parts[0]}</div><div class="joke-punchline">${parts[1]}</div>`
-        : `<div class="joke-setup">${data.text}</div>`}
+          ? `<div class="joke-setup">${parts[0]}</div><div class="joke-punchline">${parts[1]}</div>`
+          : `<div class="joke-setup">${data.text}</div>`}
     </div>`;
-  }
-  else if (data.type === 'definition') {
-    const d = data.data;
-    const phonetic = d.phonetics?.find(p=>p.text)?.text || '';
-    inner = `<div class="dict-card">
+    }
+    else if (data.type === 'definition') {
+      const d = data.data;
+      const phonetic = d.phonetics?.find(p => p.text)?.text || '';
+      inner = `<div class="dict-card">
       <div class="dict-word">${d.word}</div>
       ${phonetic ? `<div class="dict-phonetic">${phonetic}</div>` : ''}
-      ${(d.meanings || []).slice(0,2).map(m=>`
+      ${(d.meanings || []).slice(0, 2).map(m => `
         <div class="dict-pos">${m.partOfSpeech}</div>
-        ${(m.definitions || []).slice(0,3).map((def,i)=>`
+        ${(m.definitions || []).slice(0, 3).map((def, i) => `
           <div class="dict-def">
-            <span class="dict-def-num">${i+1}.</span>
+            <span class="dict-def-num">${i + 1}.</span>
             <div>
               <div>${def.definition}</div>
               ${def.example ? `<div class="dict-example">"${def.example}"</div>` : ''}
@@ -350,92 +403,92 @@ function renderResponse(data) {
           </div>`).join('')}
       `).join('')}
     </div>`;
+    }
+
+    return inner;
   }
 
-  return inner;
-}
+  // ── ADD MESSAGE TO DOM (shared between live and replay) ──
+  function addMsgDOM(role, content, isHTML = false) {
+    const welcome = document.getElementById('welcome');
+    if (welcome) welcome.remove();
 
-// ── ADD MESSAGE TO DOM (shared between live and replay) ──
-function addMsgDOM(role, content, isHTML = false) {
-  const welcome = document.getElementById('welcome');
-  if (welcome) welcome.remove();
+    const msgs = document.getElementById('messages');
+    const div = document.createElement('div');
+    div.className = `msg ${role}`;
 
-  const msgs = document.getElementById('messages');
-  const div = document.createElement('div');
-  div.className = `msg ${role}`;
+    const avatarContent = role === 'user'
+      ? '<i class="fa-solid fa-user" style="font-size:.65rem"></i>'
+      : '<i class="fa-solid fa-robot" style="font-size:.75rem"></i>';
 
-  const avatarContent = role === 'user'
-    ? '<i class="fa-solid fa-user" style="font-size:.65rem"></i>'
-    : '<i class="fa-solid fa-robot" style="font-size:.75rem"></i>';
-
-  div.innerHTML = `
+    div.innerHTML = `
     <div class="msg-avatar">${avatarContent}</div>
     <div class="msg-bubble">${isHTML ? content : md(content)}</div>`;
 
-  msgs.appendChild(div);
-  scrollToBottom(true);
-  return div;
-}
+    msgs.appendChild(div);
+    scrollToBottom(true);
+    return div;
+  }
 
-// ── STREAMING TEXT EFFECT ──
-function streamText(bubble, text) {
-  return new Promise(resolve => {
-    // Split into chunks: words + whitespace tokens for natural pacing
-    const tokens = text.match(/(\S+|\s+)/g) || [];
-    let idx = 0;
-    let displayed = '';
-    let lastRender = 0;
-    // Use a plain text node approach: stream raw text, do ONE final md parse
-    const textNode = document.createTextNode('');
-    const cursor = document.createElement('span');
-    cursor.className = 'stream-cursor';
-    bubble.innerHTML = '';
-    bubble.appendChild(textNode);
-    bubble.appendChild(cursor);
+  // ── STREAMING TEXT EFFECT ──
+  function streamText(bubble, text) {
+    return new Promise(resolve => {
+      // Split into chunks: words + whitespace tokens for natural pacing
+      const tokens = text.match(/(\S+|\s+)/g) || [];
+      let idx = 0;
+      let displayed = '';
+      let lastRender = 0;
+      // Use a plain text node approach: stream raw text, do ONE final md parse
+      const textNode = document.createTextNode('');
+      const cursor = document.createElement('span');
+      cursor.className = 'stream-cursor';
+      bubble.innerHTML = '';
+      bubble.appendChild(textNode);
+      bubble.appendChild(cursor);
 
-    // Chars per frame — higher = faster
-    const CHARS_PER_FRAME = 4;
+      // Chars per frame — higher = faster
+      const CHARS_PER_FRAME = 4;
 
-    function tick(ts) {
-      if (idx >= tokens.length) {
-        // Done — do single markdown render
-        bubble.innerHTML = md(text);
+      function tick(ts) {
+        if (idx >= tokens.length) {
+          // Done — do single markdown render
+          bubble.innerHTML = md(text);
+          scrollToBottom();
+          resolve();
+          return;
+        }
+
+        // Throttle to ~60fps naturally via rAF, but batch multiple tokens per frame
+        let charsAdded = 0;
+        while (idx < tokens.length && charsAdded < CHARS_PER_FRAME) {
+          displayed += tokens[idx];
+          charsAdded += tokens[idx].length;
+          idx++;
+        }
+
+        textNode.nodeValue = displayed;
         scrollToBottom();
-        resolve();
-        return;
+        requestAnimationFrame(tick);
       }
 
-      // Throttle to ~60fps naturally via rAF, but batch multiple tokens per frame
-      let charsAdded = 0;
-      while (idx < tokens.length && charsAdded < CHARS_PER_FRAME) {
-        displayed += tokens[idx];
-        charsAdded += tokens[idx].length;
-        idx++;
-      }
-
-      textNode.nodeValue = displayed;
-      scrollToBottom();
       requestAnimationFrame(tick);
-    }
+    });
+  }
 
-    requestAnimationFrame(tick);
-  });
-}
+  function sleep(ms) {
+    return new Promise(r => setTimeout(r, ms));
+  }
 
-function sleep(ms) {
-  return new Promise(r => setTimeout(r, ms));
-}
+  // ── TYPING INDICATOR ──
+  function addTyping() {
+    const welcome = document.getElementById('welcome');
+    if (welcome) welcome.remove();
 
-// ── TYPING INDICATOR ──
-function addTyping() {
-  const welcome = document.getElementById('welcome');
-  if (welcome) welcome.remove();
-
-  const msgs = document.getElementById('messages');
-  const div = document.createElement('div');
-  div.className = 'msg assistant';
-  div.id = 'typing-indicator';
-  div.innerHTML = `
+    const msgs = document.getElementById('messages');
+    const div = document.createElement('div');
+    div.className = 'msg assistant';
+    div.id = 'typing-indicator';
+    div.innerHTML = `
     <div class="msg-avatar"><i class="fa-solid fa-robot" style="font-size:.75rem"></i></div>
     <div class="msg-bubble">
       <div class="typing">
@@ -445,175 +498,175 @@ function addTyping() {
         <div class="typing-dot"></div>
       </div>
     </div>`;
-  msgs.appendChild(div);
-  scrollToBottom(true);
-}
-
-function removeTyping() {
-  const t = document.getElementById('typing-indicator');
-  if (t) t.remove();
-}
-
-// ── SEND MESSAGE ──
-async function sendMessage() {
-  if (isLoading) return;
-  const inp = document.getElementById('input');
-  const message = inp.value.trim();
-  if (!message) return;
-
-  inp.value = '';
-  inp.style.height = 'auto';
-  isLoading = true;
-  document.getElementById('send-btn').disabled = true;
-
-  // Add user message
-  addMsgDOM('user', message);
-  history.push({ role: 'user', content: message });
-
-  // Create / update session
-  const isFirstMsg = !currentSessionId;
-  if (isFirstMsg) {
-    currentSessionId = generateId();
-    sessions.push({
-      id: currentSessionId,
-      title: getSessionTitle(message),
-      icon: getSessionIcon(message),
-      ts: Date.now(),
-      history: [],
-      messages: []
-    });
-  }
-  // Save user message to session
-  const sess = sessions.find(s => s.id === currentSessionId);
-  if (sess) {
-    sess.messages = sess.messages || [];
-    sess.messages.push({ role: 'user', content: message, html: false });
+    msgs.appendChild(div);
+    scrollToBottom(true);
   }
 
-  renderChatList();
-  addTyping();
+  function removeTyping() {
+    const t = document.getElementById('typing-indicator');
+    if (t) t.remove();
+  }
 
-  try {
-    const res = await fetch('/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message, history: history.slice(-10) })
-    });
+  // ── SEND MESSAGE ──
+  async function sendMessage() {
+    if (isLoading) return;
+    const inp = document.getElementById('input');
+    const message = inp.value.trim();
+    if (!message) return;
 
-    const data = await res.json();
-    removeTyping();
+    inp.value = '';
+    inp.style.height = 'auto';
+    isLoading = true;
+    document.getElementById('send-btn').disabled = true;
 
-    if (!res.ok || data.error) {
-      const errMsg = `**Error:** ${data.error || 'Something went wrong. Please try again.'}`;
-      // Show error with stream effect
+    // Add user message
+    addMsgDOM('user', message);
+    history.push({ role: 'user', content: message });
+
+    // Create / update session
+    const isFirstMsg = !currentSessionId;
+    if (isFirstMsg) {
+      currentSessionId = generateId();
+      sessions.push({
+        id: currentSessionId,
+        title: getSessionTitle(message),
+        icon: getSessionIcon(message),
+        ts: Date.now(),
+        history: [],
+        messages: []
+      });
+    }
+    // Save user message to session
+    const sess = sessions.find(s => s.id === currentSessionId);
+    if (sess) {
+      sess.messages = sess.messages || [];
+      sess.messages.push({ role: 'user', content: message, html: false });
+    }
+
+    renderChatList();
+    addTyping();
+
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message, history: history.slice(-10) })
+      });
+
+      const data = await res.json();
+      removeTyping();
+
+      if (!res.ok || data.error) {
+        const errMsg = `**Error:** ${data.error || 'Something went wrong. Please try again.'}`;
+        // Show error with stream effect
+        const div = document.createElement('div');
+        div.className = 'msg assistant';
+        div.innerHTML = `<div class="msg-avatar"><i class="fa-solid fa-robot" style="font-size:.75rem"></i></div><div class="msg-bubble"></div>`;
+        document.getElementById('messages').appendChild(div);
+        await streamText(div.querySelector('.msg-bubble'), errMsg);
+      } else {
+        const isRich = data.type !== 'chat';
+        const html = renderResponse(data);
+
+        if (isRich) {
+          // Rich cards: show immediately (no streaming for cards/images)
+          addMsgDOM('assistant', html, true);
+          if (sess) sess.messages.push({ role: 'assistant', html: html });
+        } else {
+          // Chat text: stream word by word
+          const welcome = document.getElementById('welcome');
+          if (welcome) welcome.remove();
+
+          const msgs = document.getElementById('messages');
+          const div = document.createElement('div');
+          div.className = 'msg assistant';
+          div.innerHTML = `<div class="msg-avatar"><i class="fa-solid fa-robot" style="font-size:.75rem"></i></div><div class="msg-bubble"></div>`;
+          msgs.appendChild(div);
+          const bubble = div.querySelector('.msg-bubble');
+          await streamText(bubble, data.text || '');
+          if (sess) sess.messages.push({ role: 'assistant', html: md(data.text || '') });
+        }
+
+        const histText = data.text || `[${data.type} response]`;
+        history.push({ role: 'assistant', content: histText });
+
+        // Update session history
+        if (sess) {
+          sess.history = history.slice();
+          sess.ts = Date.now();
+        }
+      }
+
+      saveSessions();
+      renderChatList();
+
+    } catch (e) {
+      removeTyping();
       const div = document.createElement('div');
       div.className = 'msg assistant';
       div.innerHTML = `<div class="msg-avatar"><i class="fa-solid fa-robot" style="font-size:.75rem"></i></div><div class="msg-bubble"></div>`;
       document.getElementById('messages').appendChild(div);
-      await streamText(div.querySelector('.msg-bubble'), errMsg);
-    } else {
-      const isRich = data.type !== 'chat';
-      const html = renderResponse(data);
-
-      if (isRich) {
-        // Rich cards: show immediately (no streaming for cards/images)
-        addMsgDOM('assistant', html, true);
-        if (sess) sess.messages.push({ role: 'assistant', html: html });
-      } else {
-        // Chat text: stream word by word
-        const welcome = document.getElementById('welcome');
-        if (welcome) welcome.remove();
-
-        const msgs = document.getElementById('messages');
-        const div = document.createElement('div');
-        div.className = 'msg assistant';
-        div.innerHTML = `<div class="msg-avatar"><i class="fa-solid fa-robot" style="font-size:.75rem"></i></div><div class="msg-bubble"></div>`;
-        msgs.appendChild(div);
-        const bubble = div.querySelector('.msg-bubble');
-        await streamText(bubble, data.text || '');
-        if (sess) sess.messages.push({ role: 'assistant', html: md(data.text || '') });
-      }
-
-      const histText = data.text || `[${data.type} response]`;
-      history.push({ role: 'assistant', content: histText });
-
-      // Update session history
-      if (sess) {
-        sess.history = history.slice();
-        sess.ts = Date.now();
-      }
+      await streamText(div.querySelector('.msg-bubble'), '**Connection error.** Make sure you\'re connected to the internet and try again.');
+      console.error(e);
     }
 
-    saveSessions();
-    renderChatList();
-
-  } catch (e) {
-    removeTyping();
-    const div = document.createElement('div');
-    div.className = 'msg assistant';
-    div.innerHTML = `<div class="msg-avatar"><i class="fa-solid fa-robot" style="font-size:.75rem"></i></div><div class="msg-bubble"></div>`;
-    document.getElementById('messages').appendChild(div);
-    await streamText(div.querySelector('.msg-bubble'), '**Connection error.** Make sure you\'re connected to the internet and try again.');
-    console.error(e);
+    isLoading = false;
+    document.getElementById('send-btn').disabled = false;
+    document.getElementById('input').focus();
   }
 
-  isLoading = false;
-  document.getElementById('send-btn').disabled = false;
-  document.getElementById('input').focus();
-}
+  // ── COPY CODE ──
+  function copyCode(btn) {
+    const code = btn.closest('.code-block').querySelector('code');
+    const text = code.innerText || code.textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      btn.classList.add('copied');
+      btn.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
+      setTimeout(() => {
+        btn.classList.remove('copied');
+        btn.innerHTML = '<i class="fa-regular fa-copy"></i> Copy';
+      }, 2000);
+    }).catch(() => {
+      // Fallback for older browsers
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      btn.classList.add('copied');
+      btn.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
+      setTimeout(() => {
+        btn.classList.remove('copied');
+        btn.innerHTML = '<i class="fa-regular fa-copy"></i> Copy';
+      }, 2000);
+    });
+  }
 
-// ── COPY CODE ──
-function copyCode(btn) {
-  const code = btn.closest('.code-block').querySelector('code');
-  const text = code.innerText || code.textContent;
-  navigator.clipboard.writeText(text).then(() => {
-    btn.classList.add('copied');
-    btn.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
-    setTimeout(() => {
-      btn.classList.remove('copied');
-      btn.innerHTML = '<i class="fa-regular fa-copy"></i> Copy';
-    }, 2000);
-  }).catch(() => {
-    // Fallback for older browsers
-    const ta = document.createElement('textarea');
-    ta.value = text;
-    ta.style.position = 'fixed';ta.style.opacity = '0';
-    document.body.appendChild(ta);ta.select();
-    document.execCommand('copy');
-    document.body.removeChild(ta);
-    btn.classList.add('copied');
-    btn.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
-    setTimeout(() => {
-      btn.classList.remove('copied');
-      btn.innerHTML = '<i class="fa-regular fa-copy"></i> Copy';
-    }, 2000);
+  // ── SIDEBAR TOGGLE ──
+  let sidebarOpen = true;
+  function toggleSidebar() {
+    sidebarOpen = !sidebarOpen;
+    const sidebar = document.querySelector('.sidebar');
+    const icon = document.getElementById('sidebar-toggle-icon');
+    sidebar.classList.toggle('collapsed', !sidebarOpen);
+    icon.className = sidebarOpen ? 'fa-solid fa-chevron-left' : 'fa-solid fa-chevron-right';
+  }
+
+  // ── INIT ──
+  renderChatList();
+  // Theme toggle
+  const themeToggle = document.getElementById('theme-toggle');
+  const currentTheme = localStorage.getItem('theme') || 'dark';
+
+  if (currentTheme === 'light') {
+    document.documentElement.classList.add('light-theme');
+    themeToggle.innerHTML = '<i class="fa-solid fa-sun"></i>';
+  }
+
+  themeToggle.addEventListener('click', () => {
+    const isLight = document.documentElement.classList.toggle('light-theme');
+    const newTheme = isLight ? 'light' : 'dark';
+    localStorage.setItem('theme', newTheme);
+    themeToggle.innerHTML = isLight ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
   });
-}
-
-// ── SIDEBAR TOGGLE ──
-let sidebarOpen = true;
-function toggleSidebar() {
-  sidebarOpen = !sidebarOpen;
-  const sidebar = document.querySelector('.sidebar');
-  const icon = document.getElementById('sidebar-toggle-icon');
-  sidebar.classList.toggle('collapsed', !sidebarOpen);
-  icon.className = sidebarOpen ? 'fa-solid fa-chevron-left' : 'fa-solid fa-chevron-right';
-}
-
-// ── INIT ──
-renderChatList();
-// Theme toggle
-const themeToggle = document.getElementById('theme-toggle');
-const currentTheme = localStorage.getItem('theme') || 'dark';
-
-if (currentTheme === 'light') {
-  document.documentElement.classList.add('light-theme');
-  themeToggle.innerHTML = '<i class="fa-solid fa-sun"></i>';
-}
-
-themeToggle.addEventListener('click', () => {
-  const isLight = document.documentElement.classList.toggle('light-theme');
-  const newTheme = isLight ? 'light' : 'dark';
-  localStorage.setItem('theme', newTheme);
-  themeToggle.innerHTML = isLight ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
-});
