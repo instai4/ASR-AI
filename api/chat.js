@@ -75,32 +75,7 @@ export default async function handler(req, res) {
       }
     }
 
-  
-
-    // ── AI IMAGE GENERATION (Pollinations — free, no key needed) ──
-    // Triggers: "generate", "create", "draw", "make", "paint", "design" + image-related words
-    const aiImgMatch =
-      msg.match(/\b(?:generate|create|draw|make|paint|design|render|imagine|produce)\b.{0,30}\b(?:image|picture|photo|illustration|art|artwork|painting|portrait|wallpaper|logo|poster|scene|landscape)\b/i) ||
-      msg.match(/\b(?:image|picture|illustration|art|artwork|painting|portrait|wallpaper|logo|poster|scene|landscape)\b.{0,20}\b(?:of|showing|with|featuring|depicting)\b/i) ||
-      msg.match(/\b(?:generate|draw|create|paint|render|design)\b\s+(?:a|an|me|some)?\s*(.{3,80})/i);
-
-   if (aiImgMatch) {
-  const finalPrompt = message.trim();
-
-  const encodedPrompt = encodeURIComponent(finalPrompt);
-
-  const imageUrl = `https://pollinations.ai/p/${encodedPrompt}`;
-
-  console.log("Generated URL:", imageUrl);
-
-  return res.json({
-    type: 'ai_image',
-    prompt: finalPrompt,
-    url: imageUrl
-  });
-}
-
-      // ── UNSPLASH PHOTOS ──
+    // ── UNSPLASH PHOTOS ──
     const imgMatch =
       msg.match(/\b(?:show|find|get|display|search)\s+(?:me\s+)?(?:(?:some|a|photos?|pictures?|images?|pics?)\s+)?(?:of\s+)?(.+?)(?:\s+(?:photos?|pictures?|images?|pics?))?\s*$/i) ||
       msg.match(/\b(?:photos?|pictures?|images?|pics?)\s+(?:of\s+)?(.+)/i);

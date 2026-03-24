@@ -295,33 +295,6 @@ function renderResponse(data) {
       </div>
     </div>`;
   }
-  else if (data.type === 'ai_image') {
-  inner = `
-    <div style="margin-top:.4rem">
-      <p style="font-size:.78rem;color:var(--txt2);margin-bottom:.6rem">
-        <i class="fa-solid fa-wand-magic-sparkles" style="color:var(--purple);margin-right:.4rem"></i>
-        Generated: <strong>${data.prompt}</strong>
-      </p>
-      <div style="border-radius:12px;overflow:hidden;max-width:512px;border:1px solid var(--border2);position:relative">
-        <div id="img-loading-${Date.now()}" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:var(--bg2);border-radius:12px;font-size:.75rem;color:var(--txt3);gap:.5rem">
-          <i class="fa-solid fa-spinner fa-spin"></i> Generating image...
-        </div>
-      <img
-  src="${data.url}"
-  alt="${data.prompt}"
-  style="width:100%;display:block;border-radius:12px"
-  onload="this.previousElementSibling.style.display='none'"
-  onerror="
-    this.previousElementSibling.innerHTML='<i class=\\'fa-solid fa-triangle-exclamation\\'></i> Failed to load image';
-  "
->
->
-      </div>
-      <p style="font-family:var(--fm);font-size:.54rem;color:var(--txt3);margin-top:.4rem">
-        <i class="fa-solid fa-circle-info"></i> Powered by Pollinations AI · Free & unlimited
-      </p>
-    </div>`;
-}
   else if (data.type === 'news') {
     const arts = (data.articles || []).filter(a => a.title && a.title !== '[Removed]').slice(0,5);
     inner = `<p style="font-size:.78rem;color:var(--txt2);margin-bottom:.4rem">Top stories ${data.topic ? 'about <strong>' + data.topic + '</strong>' : ''}</p>
