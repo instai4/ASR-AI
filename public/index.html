@@ -907,23 +907,48 @@ function addMsgDOM(role, content, isHTML = false) {
 }
 
 // ── STREAMING TEXT EFFECT ──
-async function streamText(bubble, text) {
-  // Show cursor
-  bubble.innerHTML = '<span class="stream-cursor"></span>';
-  const words = text.split(/(\s+)/);
-  let displayed = '';
-  for (let i = 0; i < words.length; i++) {
-    displayed += words[i];
-    // Render markdown on the accumulated text, append cursor
-    bubble.innerHTML = md(displayed) + '<span class="stream-cursor"></span>';
-    scrollToBottom();
-    // Speed: ~25ms per chunk, faster for spaces
-    const isSpace = /^\s+$/.test(words[i]);
-    if (!isSpace) await sleep(18 + Math.random() * 14);
-  }
-  // Final render without cursor
-  bubble.innerHTML = md(text);
-  scrollToBottom();
+function streamText(bubble, text) {
+  return new Promise(resolve => {
+    // Split into chunks: words + whitespace tokens for natural pacing
+    const tokens = text.match(/(\S+|\s+)/g) || [];
+    let idx = 0;
+    let displayed = '';
+    let lastRender = 0;
+    // Use a plain text node approach: stream raw text, do ONE final md parse
+    const textNode = document.createTextNode('');
+    const cursor = document.createElement('span');
+    cursor.className = 'stream-cursor';
+    bubble.innerHTML = '';
+    bubble.appendChild(textNode);
+    bubble.appendChild(cursor);
+
+    // Chars per frame — higher = faster
+    const CHARS_PER_FRAME = 4;
+
+    function tick(ts) {
+      if (idx >= tokens.length) {
+        // Done — do single markdown render
+        bubble.innerHTML = md(text);
+        scrollToBottom();
+        resolve();
+        return;
+      }
+
+      // Throttle to ~60fps naturally via rAF, but batch multiple tokens per frame
+      let charsAdded = 0;
+      while (idx < tokens.length && charsAdded < CHARS_PER_FRAME) {
+        displayed += tokens[idx];
+        charsAdded += tokens[idx].length;
+        idx++;
+      }
+
+      textNode.nodeValue = displayed;
+      scrollToBottom();
+      requestAnimationFrame(tick);
+    }
+
+    requestAnimationFrame(tick);
+  });
 }
 
 function sleep(ms) {
