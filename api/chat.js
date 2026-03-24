@@ -47,49 +47,6 @@ export default async function handler(req, res) {
         return res.json({ type: 'weather', data: d });
       }
     }
-   const { GoogleGenerativeAI } = require("@google/generative-ai");
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY); // 🔥 paste your key
-
-// inside your route
-const message = req.body.message;
-
-// detect image request
-const aiImgMatch = /(generate|create|draw|make).*(image|picture|art)?/i.test(message);
-
-if (aiImgMatch) {
-  try {
-    const prompt = message.replace(/generate|create|draw|make|image|picture/gi, '').trim();
-
-    // 🔥 Gemini image model
-    const model = genAI.getGenerativeModel({
-      model: "gemini-1.5-flash"
-    });
-
-    const result = await model.generateContent([
-      `Generate a detailed image of: ${prompt}`
-    ]);
-
-    // ⚠️ Gemini returns text + sometimes base64 image (depends on model)
-    const response = result.response;
-
-    // fallback: generate image via URL API (stable method)
-    const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}`;
-
-    return res.json({
-      type: "ai_image",
-      prompt,
-      url: imageUrl
-    });
-
-  } catch (err) {
-    console.error(err);
-    return res.json({
-      type: "error",
-      message: "Image generation failed"
-    });
-  }
-}
 
     // ── NEWS ──
     const newsMatch = msg.match(/\b(?:news|latest|headlines|trending|breaking|top stories?)\b/);
