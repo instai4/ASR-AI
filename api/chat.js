@@ -31,10 +31,18 @@ export default async function handler(req, res) {
     }
 
     // ── WEATHER ──
-    const weatherMatch = msg.match(/\b(?:weather|temperature|temp|forecast|humidity|wind|rain|snow|climate|hot|cold)\b.*?(?:in|at|for)?\s+([a-zA-Z\s]{2,30}?)(?:\?|$|,)/) ||
-      msg.match(/(?:in|at|for)\s+([a-zA-Z\s]{2,25}?)\s+(?:weather|temperature|temp|forecast)/);
-    const cityFallback = msg.match(/(?:weather|temperature|forecast|temp)\s+(?:in\s+)?([a-zA-Z\s]{2,25})/);
-    const city = (weatherMatch && weatherMatch[1]?.trim()) || (cityFallback && cityFallback[1]?.trim());
+    // Normalize apostrophes so "how's" / "what's" don't break matching
+    const msgNorm = msg.replace(/[''`]/g, '');
+    const weatherMatch =
+      // "weather/forecast/temp in|at|for <city>" anywhere in sentence
+      msgNorm.match(/\b(?:weather|temperature|temp|forecast|humidity|wind|rain|snow|climate)\b[\w\s,]*?\b(?:in|at|for)\s+([a-zA-Z][a-zA-Z\s]{1,28}?)(?:\?|!|,|$)/) ||
+      // "<city> weather/temperature/forecast"
+      msgNorm.match(/\b(?:in|at|for)\s+([a-zA-Z][a-zA-Z\s]{1,28}?)\s+\b(?:weather|temperature|temp|forecast)\b/) ||
+      // bare "weather <city>" with optional preposition
+      msgNorm.match(/\b(?:weather|temperature|temp|forecast)\s+(?:in\s+|at\s+|for\s+)?([a-zA-Z][a-zA-Z\s]{1,28}?)(?:\?|!|,|\s*$)/);
+
+    const city = weatherMatch?.[1]?.trim().replace(/\s+/g, ' ') || null;
+
     if (city && /\b(weather|temperature|temp|forecast|humidity|wind|rain|climate|hot|cold)\b/.test(msg)) {
       const WKEY = process.env.WEATHER_API_KEY;
       const r = await fetch(`https://api.weatherapi.com/v1/current.json?key=${WKEY}&q=${encodeURIComponent(city)}&aqi=yes`);
@@ -48,8 +56,27 @@ export default async function handler(req, res) {
     const newsMatch = msg.match(/\b(?:news|latest|headlines|trending|breaking|top stories?)\b/);
     if (newsMatch) {
       const NKEY = process.env.NEWS_API_KEY;
-      const topic = msg.replace(/\b(news|latest|headlines|trending|breaking|top stories?|about|on|for|give me|show me|get)\b/g, '').trim() || 'technology';
-      const r = await fetch(`https://newsapi.org/v2/everything?q=${encodeURIComponent(topic || 'technology')}&pageSize=6&sortBy=publishedAt&apiKey=${NKEY}`);
+
+      // 1. Explicit pattern: "news about X" / "headlines on X" / "stories regarding X"
+      // 2. "latest/breaking on X" / "latest AI news" style
+      // 3. "X news" / "X headlines" — topic comes before the keyword
+      const topicMatch =
+        msg.match(/\b(?:news|headlines|stories?)\s+(?:about|on|regarding|covering)\s+([a-zA-Z][\w\s]{1,40}?)(?:\?|$)/) ||
+        msg.match(/\b(?:latest|breaking|trending)\s+(?:news\s+)?(?:about|on|in|regarding)?\s+([a-zA-Z][\w\s]{1,40}?)(?:\?|$)/) ||
+        msg.match(/([a-zA-Z][\w\s]{1,30}?)\s+\b(?:news|headlines|stories?)\b/);
+
+      const topic = topicMatch?.[1]?.trim().replace(/\s+/g, ' ') ||
+        // Fallback: strip filler words; only use result if something meaningful (3+ chars) remains
+        (() => {
+          const stripped = msg
+            .replace(/\b(news|latest|headlines|trending|breaking|top|stories?|about|on|for|give|me|show|get|some|the|a|an)\b/g, '')
+            .replace(/[^a-zA-Z\s]/g, '')
+            .trim()
+            .replace(/\s+/g, ' ');
+          return stripped.length >= 3 ? stripped : 'world';
+        })();
+
+      const r = await fetch(`https://newsapi.org/v2/everything?q=${encodeURIComponent(topic)}&pageSize=6&sortBy=publishedAt&apiKey=${NKEY}`);
       if (r.ok) {
         const d = await r.json();
         return res.json({ type: 'news', topic, articles: d.articles?.slice(0, 6) || [] });
@@ -57,11 +84,14 @@ export default async function handler(req, res) {
     }
 
     // ── IMAGES ──
-    const imgMatch = msg.match(/\b(?:show|find|get|display|search)\s+(?:me\s+)?(?:(?:some|a|photos?|pictures?|images?|pics?)\s+)?(?:of\s+)?(.+?)(?:\s+(?:photos?|pictures?|images?|pics?))?\s*$/i) ||
+    const imgMatch =
+      msg.match(/\b(?:show|find|get|display|search)\s+(?:me\s+)?(?:(?:some|a|photos?|pictures?|images?|pics?)\s+)?(?:of\s+)?(.+?)(?:\s+(?:photos?|pictures?|images?|pics?))?\s*$/i) ||
       msg.match(/\b(?:photos?|pictures?|images?|pics?)\s+(?:of\s+)?(.+)/i);
     if (imgMatch || /\b(photo|picture|image|pic|wallpaper|illustration)\b/.test(msg)) {
       const UKEY = process.env.UNSPLASH_ACCESS_KEY;
-      const query = (imgMatch && imgMatch[1]?.trim()) || msg.replace(/\b(show|find|get|photo|picture|image|pic|wallpaper|me|some|a|of)\b/g, '').trim() || 'nature';
+      const query = (imgMatch && imgMatch[1]?.trim()) ||
+        msg.replace(/\b(show|find|get|photo|picture|image|pic|wallpaper|me|some|a|of)\b/g, '').trim() ||
+        'nature';
       const r = await fetch(`https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=6&client_id=${UKEY}`);
       if (r.ok) {
         const d = await r.json();
@@ -89,25 +119,32 @@ export default async function handler(req, res) {
     // ── GEMINI (default) ──
     const GKEY = process.env.GEMINI_API_KEY;
     const models = ['gemini-2.0-flash-lite', 'gemini-1.5-flash-8b', 'gemini-2.5-flash', 'gemini-2.5-flash-lite'];
-    const systemPrompt = `You are ASR AI, a powerful, friendly, and knowledgeable AI assistant created by Anurag Rajput. 
+    const systemPrompt = `You are ASR AI, a powerful, friendly, and knowledgeable AI assistant created by Anurag Rajput.
 You have access to multiple APIs including web search, weather, news, images, jokes, and dictionary.
 Be concise, helpful, accurate, and conversational. Format responses with markdown when helpful.
 If asked about yourself, say you are ASR AI built by Anurag Rajput.`;
 
     const contents = [
-      ...history.slice(-8).map(m => ({ role: m.role === 'assistant' ? 'model' : 'user', parts: [{ text: m.content }] })),
+      ...history.slice(-8).map(m => ({
+        role: m.role === 'assistant' ? 'model' : 'user',
+        parts: [{ text: m.content }]
+      })),
       { role: 'user', parts: [{ text: message }] }
     ];
 
     for (const model of models) {
-      const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GKEY}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents,
-          generationConfig: { maxOutputTokens: 2048, temperature: 0.8 }
-        })
-      });
+      const r = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GKEY}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents,
+            systemInstruction: { parts: [{ text: systemPrompt }] },
+            generationConfig: { maxOutputTokens: 2048, temperature: 0.8 }
+          })
+        }
+      );
       const d = await r.json();
       if (!r.ok) {
         console.log(`Model ${model} failed: ${r.status}`, d?.error?.message);
