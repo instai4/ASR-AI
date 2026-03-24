@@ -47,20 +47,19 @@ export default async function handler(req, res) {
         return res.json({ type: 'weather', data: d });
       }
     }
-    if (aiImgMatch) {
-  // ✅ Keep prompt simple (no over-cleaning bugs)
+   const message = req.body.message;
+
+// ✅ DEFINE THIS FIRST
+const aiImgMatch = /generate|create|draw|make|image|picture|art/i.test(message);
+
+if (aiImgMatch) {
   const prompt = message.trim();
 
   const encodedPrompt = encodeURIComponent(prompt);
   const seed = Math.floor(Math.random() * 999999);
 
-  // ✅ Stable Pollinations URL (removed breaking params)
   const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?seed=${seed}`;
-
-  // ✅ Fallback (ALWAYS works)
   const fallbackUrl = `https://picsum.photos/seed/${encodedPrompt}/512/512`;
-
-  console.log("AI URL:", imageUrl);
 
   return res.json({
     type: 'ai_image',
