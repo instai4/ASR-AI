@@ -1,18 +1,16 @@
-# ASR AI 🤖
+<div align="center">
+
+![Banner](https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=6,11,20&height=160&section=header&text=ASR_AI&fontSize=48&fontColor=fff&animation=twinkling&fontAlignY=40)
+
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-FF6B9D?style=for-the-badge&logo=google-chrome&logoColor=white)](https://asr-ai-omega.vercel.app/)
+[![GitHub](https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/instai4)
+[![Portfolio](https://img.shields.io/badge/Portfolio-A855F7?style=for-the-badge&logo=firefox&logoColor=white)](https://instai4.github.io/PORT-FOLIO/)
 
 ASR AI is an intelligent chatbot designed to assist you with a wide range of tasks. Whether you need to get the latest weather report, generate code snippets, find images, stay updated with news, perform web searches, define terms, tell a joke, or look up words in a dictionary, ASR AI has you covered. It's built with a user-friendly interface and offers 24/7 availability to cater to your needs anytime, anywhere.
 
-## 🚀 Live Demo
+</div>
 
-Experience ASR AI firsthand!
 
-[https://asr-ai-omega.vercel.app/](https://asr-ai-omega.vercel.app/)
-
-## 🔗 GitHub Repository
-
-Contribute to or explore the source code of ASR AI.
-
-[https://github.com/instai4/ASR-AI](https://github.com/instai4/ASR-AI)
 
 ## 🛠️ Tech Stack
 
