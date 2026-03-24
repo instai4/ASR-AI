@@ -311,10 +311,10 @@ function renderResponse(data) {
   alt="${data.prompt}"
   style="width:100%;display:block;border-radius:12px"
   onload="this.previousElementSibling.style.display='none'"
-  onerror="
-    this.previousElementSibling.innerHTML='Retrying...';
-    setTimeout(() => { this.src='${data.url}&retry=' + Date.now(); }, 1000);
-  "
+ onerror="
+  console.log('IMAGE FAILED:', this.src);
+  this.previousElementSibling.innerHTML='Failed to load image';
+"
 >
       </div>
       <p style="font-family:var(--fm);font-size:.54rem;color:var(--txt3);margin-top:.4rem">

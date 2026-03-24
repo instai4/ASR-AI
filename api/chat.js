@@ -90,13 +90,12 @@ export default async function handler(req, res) {
     .replace(/\b(image|picture|artwork|photo)\b\s*(of)?/gi, '')
     .trim();
 
-  const finalPrompt = rawPrompt || message;
+ const finalPrompt = message.trim();
+const encodedPrompt = encodeURIComponent(finalPrompt);
+const seed = Math.floor(Math.random() * 999999);
 
-  const encodedPrompt = encodeURIComponent(finalPrompt);
-  const seed = Math.floor(Math.random() * 999999);
-
-  const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&seed=${seed}`;
- console.log("Generated URL:", imageUrl);
+const imageUrl = `https://pollinations.ai/p/${encodedPrompt}?seed=${seed}`;
+console.log("Generated URL:", imageUrl);
   return res.json({
     type: 'ai_image',
     prompt: finalPrompt,
