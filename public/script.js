@@ -329,7 +329,15 @@ function renderResponse(data) {
         ${a.description ? `<div class="news-desc">${a.description.slice(0,100)}...</div>` : ''}
       </a>`).join('')}</div>`;
   }
- 
+  else if (data.type === 'images') {
+    const photos = data.photos || [];
+    inner = `<p style="font-size:.78rem;color:var(--txt2);margin-bottom:.4rem">Photos of <strong>${data.query}</strong></p>
+    <div class="img-grid">${photos.map(p=>`
+      <div class="img-item" onclick="window.open('${p.links?.html}','_blank')">
+        <img src="${p.urls?.small}" alt="${p.alt_description || data.query}" loading="lazy">
+      </div>`).join('')}</div>
+    <p style="font-family:var(--fm);font-size:.54rem;color:var(--txt3);margin-top:.4rem">Click any photo to view full size</p>`;
+  }
   else if (data.type === 'search') {
     inner = `${data.snippet ? `<div class="search-answer"><p>${data.snippet}</p></div>` : ''}
     <div class="search-results">${(data.results || []).map(r=>`
