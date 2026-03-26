@@ -40,6 +40,7 @@ function getSessionIcon(message) {
   const m = message.toLowerCase();
   if (/weather|temperature|forecast|rain|snow|cloud/.test(m)) return 'fa-cloud-sun';
   if (/news|headline|latest|breaking/.test(m)) return 'fa-newspaper';
+  if (/generate|create|draw|paint|imagine|design/.test(m)) return 'fa-wand-magic-sparkles';
   if (/photo|image|picture|pic|show/.test(m)) return 'fa-image';
   if (/joke|funny|laugh|humor/.test(m)) return 'fa-face-laugh';
   if (/define|meaning|dictionary/.test(m)) return 'fa-book-open';
@@ -62,7 +63,6 @@ function renderChatList() {
   const list = document.getElementById('chat-list');
   const empty = document.getElementById('chat-list-empty');
 
-  // Remove all non-empty items
   list.querySelectorAll('.recent-item').forEach(el => el.remove());
 
   if (sessions.length === 0) {
@@ -71,7 +71,6 @@ function renderChatList() {
   }
   empty.style.display = 'none';
 
-  // Render newest first
   [...sessions].reverse().forEach(sess => {
     const item = document.createElement('div');
     item.className = 'recent-item' + (sess.id === currentSessionId ? ' active' : '');
@@ -113,7 +112,6 @@ function loadSession(id) {
   currentSessionId = id;
   history = sess.history || [];
 
-  // Rebuild messages DOM
   const msgs = document.getElementById('messages');
   msgs.innerHTML = '';
   (sess.messages || []).forEach(m => {
@@ -159,19 +157,19 @@ function resetToWelcome() {
         </svg>
       </div>
       <h1>ASR AI</h1>
-      <p>Your intelligent  assistant. Ask me anything — I can chat, search the web, get weather, fetch news, find images, tell jokes, and define words.</p>
+      <p>Your intelligent assistant. Ask me anything — chat, search, weather, news, images, AI image generation, jokes, and definitions.</p>
       <div class="suggestion-grid">
         <div class="suggestion" onclick="insertPrompt('What\\'s the weather in Mumbai today?')">
           <div class="suggestion-icon"><i class="fa-solid fa-cloud-sun"></i></div>
           <div class="suggestion-text">Weather in Mumbai today</div>
         </div>
+        <div class="suggestion" onclick="insertPrompt('Generate an image of a futuristic city at night')">
+          <div class="suggestion-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+          <div class="suggestion-text">Generate an AI image</div>
+        </div>
         <div class="suggestion" onclick="insertPrompt('Latest AI news')">
           <div class="suggestion-icon"><i class="fa-solid fa-newspaper"></i></div>
           <div class="suggestion-text">Latest AI news</div>
-        </div>
-        <div class="suggestion" onclick="insertPrompt('Show me photos of sunset')">
-          <div class="suggestion-icon"><i class="fa-solid fa-image"></i></div>
-          <div class="suggestion-text">Show me photos of sunset</div>
         </div>
         <div class="suggestion" onclick="insertPrompt('Tell me a funny joke')">
           <div class="suggestion-icon"><i class="fa-solid fa-face-laugh"></i></div>
@@ -217,7 +215,7 @@ function handleKey(e) {
 
 function scrollToBottom(force = false) {
   const m = document.getElementById('messages');
-  const threshold = 120; // px from bottom
+  const threshold = 120;
   const isNearBottom = m.scrollHeight - m.scrollTop - m.clientHeight < threshold;
   if (force || isNearBottom) m.scrollTop = m.scrollHeight;
 }
@@ -250,7 +248,7 @@ function md(text) {
     }).join('\n');
 }
 
-// ── WEATHER ICON using Font Awesome ──
+// ── WEATHER ICON ──
 function getWeatherIcon(code, isDay) {
   if (code === 1000) return isDay ? '<i class="fa-solid fa-sun" style="color:var(--amber)"></i>' : '<i class="fa-solid fa-moon" style="color:var(--txt2)"></i>';
   if (code <= 1009) return isDay ? '<i class="fa-solid fa-cloud-sun" style="color:var(--amber)"></i>' : '<i class="fa-solid fa-cloud-moon" style="color:var(--txt2)"></i>';
@@ -271,6 +269,44 @@ function renderResponse(data) {
   if (data.type === 'chat') {
     inner = md(data.text || '');
   }
+
+  else if (data.type === 'generated_image') {
+    if (data.error || !data.imageUrl) {
+      inner = `<p style="color:var(--rose);font-size:.82rem"><i class="fa-solid fa-triangle-exclamation" style="margin-right:.4rem"></i>${data.error || 'Image generation failed. Try again.'}</p>`;
+    } else {
+      const sourceLabel = data.source === 'sd' ? 'Stability AI · SDXL' : data.source === 'hf' ? 'FLUX.1-schnell' : 'Pollinations · FLUX';
+      const safePrompt = (data.prompt || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+      const safeUrl = (data.imageUrl || '').replace(/'/g, "\\'");
+      inner = `<div class="gen-img-card">
+        <div class="gen-img-prompt"><i class="fa-solid fa-wand-magic-sparkles"></i> &ldquo;${data.prompt}&rdquo;</div>
+        <div class="gen-img-wrap">
+          <img
+            src="${data.imageUrl}"
+            alt="${data.prompt}"
+            loading="lazy"
+            onload="this.classList.add('loaded')"
+            onclick="openImgFull('${safeUrl}', '${safePrompt}')"
+          >
+          <div class="gen-img-loading">
+            <div class="gen-img-spinner"></div>
+            <div class="gen-img-loading-txt">Rendering image…</div>
+          </div>
+        </div>
+        <div class="gen-img-footer">
+          <span class="gen-img-source">${sourceLabel}</span>
+          <div style="display:flex;gap:.4rem">
+            <button class="gen-img-dl" onclick="openImgFull('${safeUrl}', '${safePrompt}')">
+              <i class="fa-solid fa-expand"></i> View
+            </button>
+            <button class="gen-img-dl" onclick="downloadGenImg('${safeUrl}', '${safePrompt}')">
+              <i class="fa-solid fa-download"></i> Save
+            </button>
+          </div>
+        </div>
+      </div>`;
+    }
+  }
+
   else if (data.type === 'weather') {
     const w = data.data;
     const c = w.current, l = w.location;
@@ -295,6 +331,7 @@ function renderResponse(data) {
       </div>
     </div>`;
   }
+
   else if (data.type === 'news') {
     const arts = (data.articles || []).filter(a => a.title && a.title !== '[Removed]').slice(0,5);
     inner = `<p style="font-size:.78rem;color:var(--txt2);margin-bottom:.4rem">Top stories ${data.topic ? 'about <strong>' + data.topic + '</strong>' : ''}</p>
@@ -305,6 +342,7 @@ function renderResponse(data) {
         ${a.description ? `<div class="news-desc">${a.description.slice(0,100)}...</div>` : ''}
       </a>`).join('')}</div>`;
   }
+
   else if (data.type === 'images') {
     const photos = data.photos || [];
     inner = `<p style="font-size:.78rem;color:var(--txt2);margin-bottom:.4rem">Photos of <strong>${data.query}</strong></p>
@@ -314,6 +352,7 @@ function renderResponse(data) {
       </div>`).join('')}</div>
     <p style="font-family:var(--fm);font-size:.54rem;color:var(--txt3);margin-top:.4rem">Click any photo to view full size</p>`;
   }
+
   else if (data.type === 'search') {
     inner = `${data.snippet ? `<div class="search-answer"><p>${data.snippet}</p></div>` : ''}
     <div class="search-results">${(data.results || []).map(r=>`
@@ -323,6 +362,7 @@ function renderResponse(data) {
         <div class="search-item-snippet">${r.snippet || ''}</div>
       </a>`).join('')}</div>`;
   }
+
   else if (data.type === 'joke') {
     const parts = data.text.split('\n\n');
     inner = `<div class="joke-card">
@@ -332,6 +372,7 @@ function renderResponse(data) {
         : `<div class="joke-setup">${data.text}</div>`}
     </div>`;
   }
+
   else if (data.type === 'definition') {
     const d = data.data;
     const phonetic = d.phonetics?.find(p=>p.text)?.text || '';
@@ -355,7 +396,67 @@ function renderResponse(data) {
   return inner;
 }
 
-// ── ADD MESSAGE TO DOM (shared between live and replay) ──
+// ── IMAGE GENERATION HELPERS ──
+function openImgFull(url, prompt) {
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,.92);backdrop-filter:blur(10px);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1.5rem;cursor:zoom-out;animation:fadeIn .2s ease';
+  overlay.onclick = () => overlay.remove();
+
+  overlay.innerHTML = `
+    <div style="max-width:90vw;max-height:85vh;position:relative" onclick="event.stopPropagation()">
+      <img src="${url}" alt="${prompt}"
+        style="max-width:100%;max-height:80vh;border-radius:14px;box-shadow:0 24px 80px rgba(0,0,0,.7);display:block">
+      <button onclick="this.closest('div[style*=fixed]').remove()"
+        style="position:absolute;top:-14px;right:-14px;width:30px;height:30px;border-radius:50%;
+        background:#fff;border:none;cursor:pointer;font-size:.8rem;
+        display:flex;align-items:center;justify-content:center;
+        box-shadow:0 2px 10px rgba(0,0,0,.4);color:#111;font-weight:700">✕</button>
+      <button onclick="downloadGenImg('${url}', '${prompt}')"
+        style="position:absolute;bottom:-14px;right:-14px;height:30px;padding:0 .8rem;border-radius:15px;
+        background:var(--blue);border:none;cursor:pointer;font-size:.65rem;font-family:var(--fm);
+        display:flex;align-items:center;gap:.3rem;color:#fff;font-weight:600;
+        box-shadow:0 2px 10px rgba(59,130,246,.4)">
+        <i class="fa-solid fa-download"></i> Save
+      </button>
+    </div>
+    <p style="font-family:var(--fm);font-size:.68rem;color:rgba(255,255,255,.45);margin-top:1rem;max-width:500px;text-align:center">&ldquo;${prompt}&rdquo;</p>
+    <p style="font-family:var(--fm);font-size:.56rem;color:rgba(255,255,255,.2);margin-top:.3rem">Click outside to close · ESC to close</p>`;
+
+  // ESC key closes
+  const onKey = (e) => { if (e.key === 'Escape') { overlay.remove(); document.removeEventListener('keydown', onKey); } };
+  document.addEventListener('keydown', onKey);
+  document.body.appendChild(overlay);
+}
+
+function downloadGenImg(url, prompt) {
+  const a = document.createElement('a');
+  const filename = (prompt || 'asr-ai-image').replace(/[^a-z0-9\s]/gi, '').replace(/\s+/g, '-').slice(0, 40).toLowerCase() + '.png';
+  if (url.startsWith('data:')) {
+    a.href = url;
+    a.download = filename;
+    a.click();
+    toast('Image saved!');
+  } else {
+    // External URL — fetch and convert to blob for proper download
+    fetch(url)
+      .then(r => r.blob())
+      .then(blob => {
+        const blobUrl = URL.createObjectURL(blob);
+        a.href = blobUrl;
+        a.download = filename;
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+        toast('Image saved!');
+      })
+      .catch(() => {
+        // Fallback: open in new tab
+        window.open(url, '_blank');
+        toast('Opened in new tab');
+      });
+  }
+}
+
+// ── ADD MESSAGE TO DOM ──
 function addMsgDOM(role, content, isHTML = false) {
   const welcome = document.getElementById('welcome');
   if (welcome) welcome.remove();
@@ -380,12 +481,9 @@ function addMsgDOM(role, content, isHTML = false) {
 // ── STREAMING TEXT EFFECT ──
 function streamText(bubble, text) {
   return new Promise(resolve => {
-    // Split into chunks: words + whitespace tokens for natural pacing
     const tokens = text.match(/(\S+|\s+)/g) || [];
     let idx = 0;
     let displayed = '';
-    let lastRender = 0;
-    // Use a plain text node approach: stream raw text, do ONE final md parse
     const textNode = document.createTextNode('');
     const cursor = document.createElement('span');
     cursor.className = 'stream-cursor';
@@ -393,26 +491,21 @@ function streamText(bubble, text) {
     bubble.appendChild(textNode);
     bubble.appendChild(cursor);
 
-    // Chars per frame — higher = faster
     const CHARS_PER_FRAME = 4;
 
-    function tick(ts) {
+    function tick() {
       if (idx >= tokens.length) {
-        // Done — do single markdown render
         bubble.innerHTML = md(text);
         scrollToBottom();
         resolve();
         return;
       }
-
-      // Throttle to ~60fps naturally via rAF, but batch multiple tokens per frame
       let charsAdded = 0;
       while (idx < tokens.length && charsAdded < CHARS_PER_FRAME) {
         displayed += tokens[idx];
         charsAdded += tokens[idx].length;
         idx++;
       }
-
       textNode.nodeValue = displayed;
       scrollToBottom();
       requestAnimationFrame(tick);
@@ -420,10 +513,6 @@ function streamText(bubble, text) {
 
     requestAnimationFrame(tick);
   });
-}
-
-function sleep(ms) {
-  return new Promise(r => setTimeout(r, ms));
 }
 
 // ── TYPING INDICATOR ──
@@ -466,11 +555,9 @@ async function sendMessage() {
   isLoading = true;
   document.getElementById('send-btn').disabled = true;
 
-  // Add user message
   addMsgDOM('user', message);
   history.push({ role: 'user', content: message });
 
-  // Create / update session
   const isFirstMsg = !currentSessionId;
   if (isFirstMsg) {
     currentSessionId = generateId();
@@ -483,11 +570,11 @@ async function sendMessage() {
       messages: []
     });
   }
-  // Save user message to session
+
   const sess = sessions.find(s => s.id === currentSessionId);
   if (sess) {
     sess.messages = sess.messages || [];
-    sess.messages.push({ role: 'user', content: message, html: false });
+    sess.messages.push({ role: 'user', content: message });
   }
 
   renderChatList();
@@ -505,7 +592,6 @@ async function sendMessage() {
 
     if (!res.ok || data.error) {
       const errMsg = `**Error:** ${data.error || 'Something went wrong. Please try again.'}`;
-      // Show error with stream effect
       const div = document.createElement('div');
       div.className = 'msg assistant';
       div.innerHTML = `<div class="msg-avatar"><i class="fa-solid fa-robot" style="font-size:.75rem"></i></div><div class="msg-bubble"></div>`;
@@ -516,11 +602,9 @@ async function sendMessage() {
       const html = renderResponse(data);
 
       if (isRich) {
-        // Rich cards: show immediately (no streaming for cards/images)
         addMsgDOM('assistant', html, true);
-        if (sess) sess.messages.push({ role: 'assistant', html: html });
+        if (sess) sess.messages.push({ role: 'assistant', html });
       } else {
-        // Chat text: stream word by word
         const welcome = document.getElementById('welcome');
         if (welcome) welcome.remove();
 
@@ -537,7 +621,6 @@ async function sendMessage() {
       const histText = data.text || `[${data.type} response]`;
       history.push({ role: 'assistant', content: histText });
 
-      // Update session history
       if (sess) {
         sess.history = history.slice();
         sess.ts = Date.now();
@@ -574,11 +657,11 @@ function copyCode(btn) {
       btn.innerHTML = '<i class="fa-regular fa-copy"></i> Copy';
     }, 2000);
   }).catch(() => {
-    // Fallback for older browsers
     const ta = document.createElement('textarea');
     ta.value = text;
-    ta.style.position = 'fixed';ta.style.opacity = '0';
-    document.body.appendChild(ta);ta.select();
+    ta.style.cssText = 'position:fixed;opacity:0';
+    document.body.appendChild(ta);
+    ta.select();
     document.execCommand('copy');
     document.body.removeChild(ta);
     btn.classList.add('copied');
@@ -602,18 +685,19 @@ function toggleSidebar() {
 
 // ── INIT ──
 renderChatList();
-// Theme toggle
-const themeToggle = document.getElementById('theme-toggle');
-const currentTheme = localStorage.getItem('theme') || 'dark';
 
-if (currentTheme === 'light') {
+const themeToggle = document.getElementById('theme-toggle');
+const savedTheme = localStorage.getItem('asr_theme') || 'dark';
+document.documentElement.setAttribute('data-theme', savedTheme);
+if (savedTheme === 'light') {
   document.documentElement.classList.add('light-theme');
   themeToggle.innerHTML = '<i class="fa-solid fa-sun"></i>';
 }
 
 themeToggle.addEventListener('click', () => {
-  const isLight = document.documentElement.classList.toggle('light-theme');
-  const newTheme = isLight ? 'light' : 'dark';
-  localStorage.setItem('theme', newTheme);
-  themeToggle.innerHTML = isLight ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
+  const isNowLight = !document.documentElement.classList.contains('light-theme');
+  document.documentElement.classList.toggle('light-theme', isNowLight);
+  document.documentElement.setAttribute('data-theme', isNowLight ? 'light' : 'dark');
+  localStorage.setItem('asr_theme', isNowLight ? 'light' : 'dark');
+  themeToggle.innerHTML = isNowLight ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
 });

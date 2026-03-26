@@ -12,6 +12,113 @@
 }
 html,body{height:100%;overflow:hidden}
 body{font-family:var(--ff);background:var(--bg);color:var(--txt);display:flex;flex-direction:column;-webkit-font-smoothing:antialiased}
+/* ── GENERATED IMAGE CARD ── */
+.gen-img-card {
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-top: .4rem;
+  max-width: 420px;
+}
+.gen-img-prompt {
+  padding: .6rem .9rem;
+  font-family: var(--fm);
+  font-size: .65rem;
+  color: var(--txt3);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+}
+.gen-img-prompt i { color: var(--purple); }
+
+.gen-img-wrap {
+  position: relative;
+  background: var(--surface);
+  min-height: 280px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.gen-img-wrap img {
+  width: 100%;
+  display: block;
+  cursor: zoom-in;
+  opacity: 0;
+  transition: opacity .4s ease;
+  border-radius: 0;
+}
+.gen-img-wrap img.loaded { opacity: 1; }
+.gen-img-wrap img.loaded ~ .gen-img-loading { display: none; }
+
+.gen-img-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: .8rem;
+}
+.gen-img-spinner {
+  width: 32px; height: 32px;
+  border: 3px solid var(--border2);
+  border-top-color: var(--purple);
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+.gen-img-loading-txt {
+  font-family: var(--fm);
+  font-size: .62rem;
+  color: var(--txt3);
+  animation: pulse-txt 1.5s ease-in-out infinite;
+}
+@keyframes pulse-txt { 0%,100%{opacity:.4} 50%{opacity:1} }
+
+.gen-img-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: .5rem .9rem;
+  border-top: 1px solid var(--border);
+}
+.gen-img-source {
+  font-family: var(--fm);
+  font-size: .56rem;
+  color: var(--txt3);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  display: flex;
+  align-items: center;
+  gap: .3rem;
+}
+.gen-img-source::before {
+  content: '';
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--green);
+  display: inline-block;
+}
+.gen-img-dl {
+  display: flex;
+  align-items: center;
+  gap: .3rem;
+  padding: .25rem .65rem;
+  border-radius: 6px;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  font-family: var(--fm);
+  font-size: .6rem;
+  color: var(--txt2);
+  cursor: pointer;
+  transition: all .12s;
+}
+.gen-img-dl:hover {
+  background: var(--blue-bg);
+  border-color: var(--blue-bd);
+  color: var(--blue2);
+}
 
 /* ── TERMS MODAL ── */
 .modal-overlay{
