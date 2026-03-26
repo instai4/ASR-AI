@@ -630,11 +630,7 @@ async function sendMessage() {
 
   } catch (e) {
     removeTyping();
-    const div = document.createElement('div');
-    div.className = 'msg assistant';
-    div.innerHTML = `<div class="msg-avatar"><i class="fa-solid fa-robot" style="font-size:.75rem"></i></div><div class="msg-bubble"></div>`;
-    document.getElementById('messages').appendChild(div);
-    console.error(e);
+    
   }
 
   isLoading = false;
