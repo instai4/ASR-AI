@@ -274,7 +274,7 @@ function renderResponse(data) {
     if (data.error || !data.imageUrl) {
       inner = `<p style="color:var(--rose);font-size:.82rem"><i class="fa-solid fa-triangle-exclamation" style="margin-right:.4rem"></i>${data.error || 'Image generation failed. Try again.'}</p>`;
     } else {
-      const sourceLabel = data.source === 'sd' ? 'ASR AI' : data.source === 'hf' ? 'ASR AI' : 'ASR AI';
+      const sourceLabel = data.source === 'sd' ? 'Stability AI · SDXL' : data.source === 'hf' ? 'FLUX.1-schnell' : 'Pollinations · FLUX';
       const safePrompt = (data.prompt || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
       const safeUrl = (data.imageUrl || '').replace(/'/g, "\\'");
       inner = `<div class="gen-img-card">
@@ -596,6 +596,7 @@ async function sendMessage() {
       div.className = 'msg assistant';
       div.innerHTML = `<div class="msg-avatar"><i class="fa-solid fa-robot" style="font-size:.75rem"></i></div><div class="msg-bubble"></div>`;
       document.getElementById('messages').appendChild(div);
+      await streamText(div.querySelector('.msg-bubble'), errMsg);
     } else {
       const isRich = data.type !== 'chat';
       const html = renderResponse(data);
@@ -613,6 +614,7 @@ async function sendMessage() {
         div.innerHTML = `<div class="msg-avatar"><i class="fa-solid fa-robot" style="font-size:.75rem"></i></div><div class="msg-bubble"></div>`;
         msgs.appendChild(div);
         const bubble = div.querySelector('.msg-bubble');
+        await streamText(bubble, data.text || '');
         if (sess) sess.messages.push({ role: 'assistant', html: md(data.text || '') });
       }
 
@@ -634,6 +636,7 @@ async function sendMessage() {
     div.className = 'msg assistant';
     div.innerHTML = `<div class="msg-avatar"><i class="fa-solid fa-robot" style="font-size:.75rem"></i></div><div class="msg-bubble"></div>`;
     document.getElementById('messages').appendChild(div);
+    await streamText(div.querySelector('.msg-bubble'), '**Connection error.** Make sure you\'re connected to the internet and try again.');
     console.error(e);
   }
 
