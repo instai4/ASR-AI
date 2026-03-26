@@ -274,7 +274,7 @@ function renderResponse(data) {
     if (data.error || !data.imageUrl) {
       inner = `<p style="color:var(--rose);font-size:.82rem"><i class="fa-solid fa-triangle-exclamation" style="margin-right:.4rem"></i>${data.error || 'Image generation failed. Try again.'}</p>`;
     } else {
-      const sourceLabel = data.source === 'sd' ? 'Stability AI · SDXL' : data.source === 'hf' ? 'FLUX.1-schnell' : 'Pollinations · FLUX';
+      const sourceLabel = data.source === 'sd' ? 'ASR AI' : data.source === 'hf' ? 'ASR AI' : 'ASR AI';
       const safePrompt = (data.prompt || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
       const safeUrl = (data.imageUrl || '').replace(/'/g, "\\'");
       inner = `<div class="gen-img-card">
