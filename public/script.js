@@ -596,7 +596,6 @@ async function sendMessage() {
       div.className = 'msg assistant';
       div.innerHTML = `<div class="msg-avatar"><i class="fa-solid fa-robot" style="font-size:.75rem"></i></div><div class="msg-bubble"></div>`;
       document.getElementById('messages').appendChild(div);
-      await streamText(div.querySelector('.msg-bubble'), errMsg);
     } else {
       const isRich = data.type !== 'chat';
       const html = renderResponse(data);
@@ -614,7 +613,6 @@ async function sendMessage() {
         div.innerHTML = `<div class="msg-avatar"><i class="fa-solid fa-robot" style="font-size:.75rem"></i></div><div class="msg-bubble"></div>`;
         msgs.appendChild(div);
         const bubble = div.querySelector('.msg-bubble');
-        await streamText(bubble, data.text || '');
         if (sess) sess.messages.push({ role: 'assistant', html: md(data.text || '') });
       }
 
@@ -636,7 +634,7 @@ async function sendMessage() {
     div.className = 'msg assistant';
     div.innerHTML = `<div class="msg-avatar"><i class="fa-solid fa-robot" style="font-size:.75rem"></i></div><div class="msg-bubble"></div>`;
     document.getElementById('messages').appendChild(div);
-   
+    console.error(e);
   }
 
   isLoading = false;
