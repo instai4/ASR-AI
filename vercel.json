@@ -1,6 +1,7 @@
 {
   "rewrites": [
-    { "source": "/api/chat", "destination": "/api/chat.js" },
-    { "source": "/(.*)",     "destination": "/public/$1" }
+    { "source": "/api/chat",   "destination": "/api/chat.js" },
+    { "source": "/api/gemini", "destination": "/api/gemini.js" },
+    { "source": "/(.*)",       "destination": "/public/$1" }
   ]
 }
