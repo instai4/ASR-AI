@@ -636,8 +636,7 @@ async function sendMessage() {
     div.className = 'msg assistant';
     div.innerHTML = `<div class="msg-avatar"><i class="fa-solid fa-robot" style="font-size:.75rem"></i></div><div class="msg-bubble"></div>`;
     document.getElementById('messages').appendChild(div);
-    await streamText(div.querySelector('.msg-bubble'), '**Connection error.** Make sure you\'re connected to the internet and try again.');
-    console.error(e);
+   
   }
 
   isLoading = false;
